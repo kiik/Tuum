@@ -1,0 +1,70 @@
+
+#include "wsocs.hpp"
+
+namespace tuum { namespace wsocks {
+
+
+
+  bool running = true;
+  boost::thread* wsSrvThread;
+
+  const int WSOCS_SRV_N = 1;
+  WebSocketServer* wsock_srvs[WSOCS_SRV_N];
+
+
+  //FIXME: Generate callbacks per-server instance.
+  int cb_http_proxy(lws *wsi, lws_callback_reasons reason,
+                  void *user, void *in, size_t len) {
+    if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_http(wsi, reason, user, in, len);
+  }
+
+  int cb_wsoc_proxy(lws *wsi, lws_callback_reasons reason,
+                  void *user, void *in, size_t len) {
+    if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_wsoc(wsi, reason, user, in, len);
+  }
+
+
+  lws_protocols gProtocols[] = {
+    {
+      "http-only",
+      cb_http_proxy,
+      0
+    },
+    {
+      "ws-binary",
+      cb_wsoc_proxy,
+      0
+    },
+    {
+      NULL, NULL, 0
+    }
+  };
+
+  int register_server(WebSocketServer* srv) {
+    for(int i=0; i < WSOCS_SRV_N; i++) {
+      if(wsock_srvs[i] != nullptr) continue;
+      wsock_srvs[i] = srv;
+      return 1;
+    }
+
+    return -1;
+  }
+
+  int setup() {
+    for(int i=0; i < WSOCS_SRV_N; i++) wsock_srvs[i] = nullptr;
+  }
+
+  int start() {
+    if(wsSrvThread == nullptr)
+      wsSrvThread = new boost::thread(&process);
+  }
+
+  void process() {
+    while(running) {
+      for(int i=0; i < WSOCS_SRV_N; i++) {
+        if(wsock_srvs[i] != nullptr) wsock_srvs[i]->process();
+      }
+    }
+  }
+
+}}
