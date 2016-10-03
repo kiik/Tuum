@@ -14,12 +14,12 @@
 
 #include "platform.t.hpp"
 
-size_t millis();
+unsigned long int millis();
 
 struct Timer {
-  size_t _start = 0;
-  size_t period = 0;
-  size_t _end = 0;
+  unsigned long int _start = 0;
+  unsigned long int period;
+  unsigned long int _end = 0;
 
   void start() {
     _start = millis();

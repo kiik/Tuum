@@ -9,9 +9,9 @@
 #include <string>
 #include <iostream>
 
-#include "tuum_platform.hpp"
-
 #include <boost/program_options.hpp>
+
+#include "tuum_platform.hpp"
 
 using namespace boost::program_options;
 
@@ -76,4 +76,12 @@ namespace tuum {
     if(process_options() < 0) return -2;
     return 0;
   }
+
+}
+
+
+namespace usr {
+
+  tuum::ProgramModule* gTuumProgram = nullptr;
+
 }

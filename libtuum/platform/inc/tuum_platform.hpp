@@ -12,6 +12,8 @@
 #include "tuum_logger.hpp"
 #include "tuum_configuration.hpp"
 
+#include "ProgramModule.hpp"
+
 #include "motion.hpp"
 
 namespace tuum {
@@ -20,6 +22,13 @@ namespace tuum {
   extern Configuration gC;
 
   int init(int argc, char *argv[]);
+
+}
+
+namespace usr {
+
+  extern tuum::ProgramModule* gTuumProgram;
+
 }
 
 #endif
