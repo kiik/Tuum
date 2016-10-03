@@ -9,3 +9,4 @@ COMMON_BUILD=../build
 HAL_PLATFORM_SRC_PATH = $(HAL_MODULE_PATH)/src/$(PLATFORM_NAME)
 
 include $(call rwildcard,$(HAL_PLATFORM_SRC_PATH)/,sources.mk)
+
