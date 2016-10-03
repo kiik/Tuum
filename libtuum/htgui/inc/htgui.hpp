@@ -13,6 +13,8 @@
 
 namespace tuum { namespace gui {
 
+  int register_server(wsocs::WebSocketServer*);
+
   int startup(int = 0, char*[] = nullptr);
 
 }}

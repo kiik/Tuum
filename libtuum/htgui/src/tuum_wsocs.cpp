@@ -1,7 +1,7 @@
 
 #include "tuum_wsocs.hpp"
 
-namespace tuum { namespace wsocks {
+namespace tuum { namespace wsocs {
 
   bool running = true;
   boost::thread* wsSrvThread;
@@ -52,17 +52,17 @@ namespace tuum { namespace wsocks {
     for(int i=0; i < WSOCS_SRV_N; i++) wsock_srvs[i] = nullptr;
   }
 
-  int start() {
-    if(wsSrvThread == nullptr)
-      wsSrvThread = new boost::thread(&process);
-  }
-
   void process() {
     while(running) {
       for(int i=0; i < WSOCS_SRV_N; i++) {
         if(wsock_srvs[i] != nullptr) wsock_srvs[i]->process();
       }
     }
+  }
+
+  int start() {
+    if(wsSrvThread == nullptr)
+      wsSrvThread = new boost::thread(&process);
   }
 
 }}

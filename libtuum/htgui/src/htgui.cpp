@@ -10,10 +10,14 @@
 
 namespace tuum { namespace gui {
 
+  int register_server(wsocs::WebSocketServer* srv) {
+    return wsocs::register_server(srv);
+  }
+
   int startup(int argc, char *argv[])
   {
-    tuum::wsocks::setup();
-    tuum::wsocks::start();
+    wsocs::setup();
+    wsocs::start();
 
     return 0;
   }

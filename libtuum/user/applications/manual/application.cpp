@@ -2,8 +2,6 @@
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
 
-#include "htgui.hpp"
-
 #include "application.hpp"
 
 using namespace tuum;
@@ -22,8 +20,6 @@ namespace usr {
 
   int main(int argc, char* argv[]) {
     sys_init();
-
-    tuum::gui::startup(argc, argv);
 
     while(1) {
       sys_main();

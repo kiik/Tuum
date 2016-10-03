@@ -1,7 +1,7 @@
 
 #include "tuum_wsocs.hpp"
 
-namespace tuum { namespace wsocks {
+namespace tuum { namespace wsocs {
 
   WebSocketServer::WebSocketServer():
     m_port(8080), m_opts(0),

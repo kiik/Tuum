@@ -6,7 +6,7 @@
 
 #include "tuum_platform.hpp"
 
-namespace tuum { namespace wsocks {
+namespace tuum { namespace wsocs {
 
   class WebSocketServer
   {
