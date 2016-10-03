@@ -6,8 +6,12 @@
 
 ifneq (,$(PLATFORM))
 
+ifeq ("$(PLATFORM)","phobos")
+PLATFORM_ID = 1
+endif
+
 ifeq ("$(PLATFORM)","tracdrone")
-PLATFORM_ID = 0
+PLATFORM_ID = 10
 endif
 
 ifeq (,$(PLATFORM_ID))
@@ -22,9 +26,16 @@ endif
 
 ARCH=gcc
 
-ifeq ("$(PLATFORM_ID)","0")
+ifeq ("$(PLATFORM_ID)","1")
+PLATFORM=phobos
+PLATFORM_NAME=phobos
+PRODUCT_DESC=Tuum Robotex 15' Robot platform
+DEFAULT_PRODUCT_ID=1
+endif
+
+ifeq ("$(PLATFORM_ID)","10")
 PLATFORM=tracdrone
 PLATFORM_NAME=tracdrone
 PRODUCT_DESC=TRACDRONE Robot
-DEFAULT_PRODUCT_ID=0
+DEFAULT_PRODUCT_ID=10
 endif

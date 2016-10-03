@@ -16,6 +16,8 @@
 #include "Feature.hpp"
 #include "Blob.hpp"
 
+using namespace tuum::hal;
+
 
 namespace tuum {
 

@@ -47,7 +47,6 @@ namespace tuum { namespace Visioning {
   bool editingRobots = false; // Unused
 
   void setup() {
-
     Camera *frontCamera = hal::hw.getCamera();
     Camera *backCamera = nullptr; //FIXME
 
@@ -71,12 +70,12 @@ namespace tuum { namespace Visioning {
 
   void process() {
     if (filters.size() == 0) {
-      std::cout << "Process: Filters are empty" << std::endl;
+      //std::cout << "Process: Filters are empty" << std::endl;
       return;
     } else {
       for (std::vector<std::string>::iterator filter = filters.begin(); filter != filters.end(); ++filter) {
         if (filter->size() == 0) {
-          std::cout << "Process: A filter is empty" << std::endl;
+          //std::cout << "Process: A filter is empty" << std::endl;
         }
       }
     }
@@ -106,12 +105,12 @@ namespace tuum { namespace Visioning {
 
   void processCheckerboard() {
     if (filters.size() == 0) {
-      std::cout << "Process: Filters are empty" << std::endl;
+      //std::cout << "Process: Filters are empty" << std::endl;
       return;
     } else {
       for (std::vector<std::string>::iterator filter = filters.begin(); filter != filters.end(); ++filter) {
         if (filter->size() == 0) {
-          std::cout << "Process: A filter is empty" << std::endl;
+          //std::cout << "Process: A filter is empty" << std::endl;
         }
       }
     }

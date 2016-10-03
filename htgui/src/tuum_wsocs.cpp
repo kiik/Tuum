@@ -1,9 +1,7 @@
 
-#include "wsocs.hpp"
+#include "tuum_wsocs.hpp"
 
 namespace tuum { namespace wsocks {
-
-
 
   bool running = true;
   boost::thread* wsSrvThread;

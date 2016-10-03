@@ -1,5 +1,5 @@
 
-#include "wsocs.hpp"
+#include "tuum_wsocs.hpp"
 
 namespace tuum { namespace wsocks {
 
