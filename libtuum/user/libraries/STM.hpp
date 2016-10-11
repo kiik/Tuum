@@ -65,6 +65,7 @@ namespace tuum {
   struct Context {
     CtrlPhase phase = CP_INIT;
     State* st;
+    STM* stm;
   };
 
   class State {
