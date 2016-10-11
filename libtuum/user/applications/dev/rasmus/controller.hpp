@@ -1,10 +1,14 @@
+
+#include <string>
 #include <iostream>
+
 #include "STM.hpp"
 
-namespace tuum{
+namespace tuum {
+
   class MyController : public Controller{
   public:
-      MyController(Context _ctx) {}
+      MyController(Context _ctx, std::string);
 
       int run();
       void init();
@@ -12,19 +16,7 @@ namespace tuum{
 
     private:
       Context ctx;
-
+      std::string m_tekst;
   };
 
-  class MyController2 : public Controller{
-  public:
-      MyController2(Context _ctx) {}
-
-      int run();
-      void init();
-      bool isRunnable();
-
-    private:
-      Context ctx;
-
-  };
 }
