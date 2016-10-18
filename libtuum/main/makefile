@@ -13,13 +13,11 @@ BUILD_PATH_BASE=$(COMMON_BUILD)/target
 $(info Building for platform: $(PLATFORM))
 
 ifeq (,$(MMODULE))
-MAIN_MODULE = modules/tuum/tdrone
+MAIN_MODULE = ctrlmod/tuum/rtex
 else
-MAIN_MODULE = modules/tuum/$(MMODULE)
+MAIN_MODULE = ctrlmod/tuum/$(MMODULE)
 endif
 
-#FIXME
-$(echo MMMMMMMMMMMOD $(MAIN_MODULE)
 MAKE_DEPENDENCIES = $(MAIN_MODULE)
 
 all: make_deps

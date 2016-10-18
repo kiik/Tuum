@@ -72,6 +72,7 @@ namespace tuum {
   }
 
   bool GUI::updateFrame() {
+    //while(camera->requestFrame(frame) < 0) {};
     frame = camera->getFrame();
     rgbFrame = toRGB(frame);
     image = Gdk::Pixbuf::create_from_data((const guint8*) rgbFrame.data, Gdk::COLORSPACE_RGB, false, 8, (int) rgbFrame.width, (int) rgbFrame.height, (int) rgbFrame.width * 3);

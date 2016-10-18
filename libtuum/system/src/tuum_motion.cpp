@@ -79,7 +79,7 @@ namespace tuum { namespace Motion {
             motorCmdTimer.start();
           }
         } else {
-	  stop();
+          stop();
           printf("[Motion]Target achieved.\n");
           motionCtx.phase = MOP_DONE;
         }

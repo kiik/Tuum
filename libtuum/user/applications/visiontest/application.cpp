@@ -29,23 +29,28 @@ static void run(GUI *gui) {
   }
 }
 
-int main(int argc, char *argv[]) {
-  printf("main(): Tuum vision test application.\n");
+namespace usr {
 
-  // Initialise constants
-  tuum::init(argc, argv);
+  int main(int argc, char *argv[]) {
+    printf("main(): Tuum vision test application.\n");
 
-  // Initialize hardware
-  tuum::hal::setup();
+    // Initialise constants
+    tuum::init(argc, argv);
 
-  // Initialize system modules
-  Visioning::setup();
-  Localization::setup();
+    // Initialize hardware
+    tuum::hal::setup();
 
-  GUI gui(argc, argv, hal::hw.getFrontCamera());
+    // Initialize system modules
+    Visioning::setup();
+    Localization::setup();
 
-  std::thread applicationThread(run, &gui);
-  applicationThread.detach();
+    GUI gui(argc, argv, hal::hw.getFrontCamera());
 
-  return gui.run();
+    std::thread applicationThread(run, &gui);
+
+    applicationThread.detach();
+
+    return gui.run();
+  }
+
 }
