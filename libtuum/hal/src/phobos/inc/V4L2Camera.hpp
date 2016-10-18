@@ -1,6 +1,6 @@
 /**
- *  @file V4L2Camera.hpp
- *  Camera class
+ *  @file V4L2CameraBase.hpp
+ *  CameraBase class
  *  Class for communication with the robot's cameras, based on the V4L2 API.
  *  The video capture example provided with the V4L2 API has been used as a
  *  model for the class.
@@ -15,182 +15,129 @@
 
 #include <string>
 
-#include "cameraConstants.hpp"    // Camera constants
+#include <sys/ioctl.h>
+#include <linux/videodev2.h>
+
+#include "cameraConstants.hpp"    // CameraBase constants
+#include "ibuf.hpp"
+
+#include "DataStream.hpp"
 #include "CameraDevice.hpp"
 
 #include "tuum_platform.hpp"
 
+
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
+
+#define CLIP(color) (unsigned char)(((color) > 0xFF) ? 0xff : (((color) < 0) ? 0 : (color)))
+
+
+/**
+  Handles ioctl function calls. Calls the ioctl multiple times until the ioctl
+  function returns an appropriate response.
+  If the ioctl function returns -1, either it failed because of a reasonable
+  argument, or it failed because of some blocking function. In this piece of
+  software, only the first option is considered to be an appropriate response
+  upon failure.
+  The first argument must be an open file descriptor.
+  The second argument is a device-dependent request code.
+  The third argument is an untyped pointer to memory.
+  Usually, on success zero is returned.  A few ioctl requests use the return
+  value as an output parameter and return a nonnegative value on success. On
+  error, -1 is returned, and errno is set appropriately.
+*/
+static int xioctl(int m_fd, unsigned long int request, void *arg) {
+  int result;
+  do {
+    // The ioctl function manipulates the underlying device parameters of
+    // special files. Many operating characteristics of character special files
+    // (in this case, the video device file) may be controlled with ioctl
+    // requests.  The file descriptor used as the first argument of the function
+    // must be an open file descriptor.
+    result = ioctl(m_fd, request, arg);
+  } while (result == -1 && errno == EINTR);
+  return result;
+}
+
+static void formatFrame(const unsigned char *source, unsigned char *destination,
+                        int width, int height, int stride) {
+  while (--height >= 0) {
+    for (int i = 0; i < width - 1; i += 2) {
+      for (int j = 0; j < 2; ++j) {
+        *destination++ = source[j * 2];
+        *destination++ = source[1];
+        *destination++ = source[3];
+      }
+      source += 4;
+    }
+    source += stride - width * 2;
+  }
+}
+
 namespace tuum { namespace hal {
 
-  /**
-    Camera image buffer structure.
-  */
-  struct buffer {
-    void *data;
-    size_t size;
-  };
-
-  struct Frame {
-    unsigned char   *data;
-    size_t          width;
-    size_t          height;
-    size_t          size;     // width * height * 3
-  };
-
-  Frame toRGB(const Frame&);
-
-  class Camera {
+  class CameraBase
+  {
+  private:
+    static const int CAPTURE_MAX_BUFFER = 5;
 
   public:
+    CameraBase(const std::string&, const int&, const int&);
+    virtual ~CameraBase();
 
-    /**
-      Camera constructor. Receives the camera device location and the preferred
-      resolution dimensions as parameters.
-      Opens and initialises the device, and starts capturing.
-    */
-    Camera(const std::string& = tuum::gC.getStr("Vision.FirstCamera"), const int& = CAMERA_WIDTH,
-           const int& = CAMERA_HEIGHT);
-
-    /**
-      Camera destructor.
-      Stops capturing, uninitialises and closes the device.
-    */
-    ~Camera();
-
-    /**
-      Returns the camera device's path.
-    */
     std::string getDevice() const;
 
-    /**
-      Returns the camera resolution's width.
-    */
-    size_t getWidth() const;
+    int getWidth() const;
+    int getHeight() const;
 
-    /**
-      Returns the camera resolution's height.
-    */
-    size_t getHeight() const;
+    const Frame& getFrame(unsigned int timeout = 1000);
 
-    const Frame& getFrame(unsigned int = 1);
+    struct buf_info {
+      int index;
+      unsigned int length;
+      void *start;
+    };
 
-  private:
+    struct video_dev {
+      int fd;
+      int cap_width, cap_height;
+      struct buf_info buff_info[CAPTURE_MAX_BUFFER];
+      int numbuffer;
+    };
 
-    /**
-      The camera device's path. The default value for this variable is described
-      in the camera constants file. The value actually used in the program can be
-      set upon class initialisation.
-      In Linux operating systems, this is usually /dev/videoN, where N is the
-      video device's number.
-    */
-    std::string device;
+    typedef std::function<void (video_dev*, v4l2_buffer*)> CaptureCallback;
 
-    /**
-      The camera resolution's width. The default value for this variable is
-      described in the camera constants file. The value actually used in the
-      program can be set upon class initialisation.
-    */
-    size_t width;
+  protected:
+    std::string m_device;
+    int m_width, m_height, m_stride;
 
-    /**
-      The camera resolution's height. The default value for this variable is
-      described in the camera constants file. The value actually used in the
-      program can be set upon class initialisation.
-    */
-    size_t height;
+    int m_fd;
+    struct data_buf_t *m_bfs;
 
-    /**
-      The camera device's file descriptor. This specific value is set upon opening
-      the device and is used in I/O operations performed on the device, and upon
-      closing the device.
-    */
-    int fileDescriptor;
-
-    struct buffer *buffers;
     unsigned int numberOfBuffers;
-    Frame frame;
     size_t stride;
 
-    /**
-      Opens the camera device. Establishes a connection between a file and a file
-      descriptor. Creates an open file description that refers to a file and a
-      file descriptor that refers to that open file description. The file
-      descriptor is used by other I/O functions to refer to that file.
-      The file descriptor is set to the lowest file descriptor not currently open
-      for the current process. The open file description is new, and therefore the
-      file descriptor shall not share it with any other process in the system.
-      Throws a runtime error if the device cannot be identified, if it is not an
-      appropriate device, or if it cannot be opened.
-    */
-    void openDevice();
+    void vidioc_enuminput(int fd);
 
-    /**
-      Closes the camera device. All I/O progress is terminated and resources
-      associated with the file descriptor are freed. However, data format
-      parameters, current input or output, control values or other properties
-      remain unchanged.
-      Throws a runtime error if the device cannot be closed. This can only happen
-      if the file descriptor used upon closing the device is not a valid open file
-      descriptor of the device.
-    */
+    void log(std::string msg) {};
+    void log(char* msg) {};
+    void log(const char* msg) {};
+
+  protected:
+    int openDevice();
+
+    int initFormat();
+    int initBuffer();
+    int startCapture();
+
+    int captureFrame(Frame&);
+    int stopCapture();
     void closeDevice();
 
-    /**
-      Initialises the camera device.
-      Checks the camera device's V4L2 capabilites, [...] TODO
-    */
-    void initialiseDevice();
+    void chkV4L2();
 
-    /**
-      // TODO
-    */
-    void uninitialiseDevice();
-
-    /**
-      // TODO
-    */
-    void initialiseFrame();
-
-    /**
-      // TODO
-    */
-    void startCapturing();
-
-    /**
-      // TODO
-    */
-    void stopCapturing();
-
-    /**
-      Checks if the camera has the necessary capabilities compatible with V4L2 to
-      be used for this application.
-      Queries the device capabilities and checks if they are compatible with the
-      V4L2 specification. Checks if the device supports the Video Capture
-      interface and the streaming I/O method. If any of these capabilities are not
-      apparent in the device, the method throws a runtime error.
-    */
-    void checkV4L2Capabilities();
-
-    void flipImage();
-
-    /**
-      Initialises the camera device video format.
-      Sets the width and height of the image to the values passed to the class
-      constructor, sets the pixel format to YUYV and interlaces the video.
-      // TODO: Deinterlace the video if needed.
-    */
-    void initialiseFormat();
-
-    /**
-      // TODO
-    */
-    void initialiseBuffer();
-
-    /**
-      // TODO
-    */
-    bool readFrame();
-
+  private:
+    size_t frameRead();
   };
 
 }}

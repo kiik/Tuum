@@ -36,7 +36,8 @@ namespace tuum { namespace hal {
       Hardware();
 
       void init();
-      void run();
+      void setup();
+      void process();
 
       Camera* getCamera();
       Camera* getFrontCamera();

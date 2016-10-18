@@ -28,6 +28,7 @@ namespace tuum { namespace hal {
     std::ifstream frontCameraDevice(gC.getStr("Vision.FirstCamera"));
     if (frontCameraDevice.good())
       m_frontCamera = new Camera(gC.getStr("Vision.FirstCamera"), CAMERA_WIDTH, CAMERA_HEIGHT);
+    if(m_frontCamera != nullptr) m_frontCamera->setup();
 
     std::ifstream backCameraDevice(gC.getStr("Vision.SecondCamera"));
     if (backCameraDevice.good())
@@ -45,7 +46,12 @@ namespace tuum { namespace hal {
     }
   }
 
-  void Hardware::run() {
+  void Hardware::setup() {
+  }
+
+  void Hardware::process() {
+    if(m_frontCamera != nullptr) m_frontCamera->process();
+
     m_mainBoard.run();
   }
 

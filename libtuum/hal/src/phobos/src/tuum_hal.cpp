@@ -15,6 +15,7 @@ namespace tuum { namespace hal {
 
   void setup() {
     hw.init();
+    hw.setup();
 
     senseTimer.setPeriod(3000);
     senseTimer.start();
@@ -26,7 +27,8 @@ namespace tuum { namespace hal {
       hw.getMainBoard()->senseBall();
       senseTimer.start();
     }
-    hw.run();
+
+    hw.process();
   }
 
 }}
