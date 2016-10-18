@@ -1,7 +1,82 @@
 
+#include <gdkmm/pixbuf.h>
+#include <glib.h>
+#include <gtkmm.h>
+
+#include "WSProtocol.hpp"
+
+#include "hal.hpp"
+#include "lpx_iformat.hpp"
+
 #include "tuum_wsocs.hpp"
 
 namespace tuum { namespace wsocs {
+
+  typedef uint8_t* data_t;
+
+  size_t lframe = 0;
+  size_t t0 = 0;
+  float dt = 0;
+
+
+  size_t read_data_stream(size_t lid, Glib::RefPtr<Gdk::Pixbuf>& out) {
+    auto camera = hal::hw.getCamera();
+    auto frame = camera->getFrame();
+
+    if(frame.id == lid) return 0;
+
+    Frame frm = hal::toRGB(frame);
+    out = lpx::rgb_to_jpg(frm);
+
+    return frame.id;
+  }
+
+  void fps() {
+    size_t t1 = millis();
+    dt = dt * 0.7 + (t1-t0) * 0.3;
+    printf("FPS=%f.0\n", 1000.0 / dt);
+    t0 = t1;
+  }
+
+  const char* mjpeg_head = "HTTP/1.1 200 OK\nCache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\nConnection: close\nContent-Type: multipart/x-mixed-replace;boundary=--FRAME--\nExpires: Mon, 3 Jan 2000 12:34:56 GMT\nPragma: no-cache\n\n";
+
+  const char* mjpeg_boundary = "\n--FRAME--\n";
+
+  void http_mjpeg_headers(lws *wsi) {
+    lws_write(wsi, (unsigned char*)mjpeg_head, strlen(mjpeg_head), LWS_WRITE_HTTP);
+  }
+
+  void http_mjpeg_stream(lws *wsi) {
+    Glib::RefPtr<Gdk::Pixbuf> image;
+
+    size_t fid = read_data_stream(lframe, image);
+    if(fid <= 0) return;
+
+    fps();
+    lframe = fid;
+
+    gchar* img_buf;
+    gsize img_len;
+    image->save_to_buffer(img_buf, img_len, "jpeg");
+
+    size_t len = img_len;
+
+    lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
+
+    std::stringstream head;
+
+    head << "X-Timestamp: " << millis() << std::endl;
+    head << "Content-Length: " << len << std::endl;
+    head << "Content-Type: " << "image/jpeg" << std::endl;
+    head << std::endl; // End of header
+
+    std::string _head = head.str();
+    lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
+
+    lws_write(wsi, (unsigned char*)img_buf, len, LWS_WRITE_HTTP);
+
+    g_free(img_buf);
+  }
 
   WebSocketServer::WebSocketServer():
     m_port(8080), m_opts(0),
@@ -9,7 +84,8 @@ namespace tuum { namespace wsocs {
     m_cert_path(nullptr), m_key_path(nullptr),
     m_protocols(nullptr), m_exts(nullptr)
   {
-
+    int v = 0;
+    char** argv = nullptr;
   }
 
   WebSocketServer::~WebSocketServer() {
@@ -57,10 +133,15 @@ namespace tuum { namespace wsocs {
   {
     switch(reason) {
       case LWS_CALLBACK_HTTP:
+        printf("[WSS:cb_http]New connection.\n");
+        http_mjpeg_headers(wsi);
+        lws_callback_on_writable(wsi);
         return 0;
       case LWS_CALLBACK_HTTP_FILE_COMPLETION:
         return 0;
       case LWS_CALLBACK_HTTP_WRITEABLE:
+        http_mjpeg_stream(wsi);
+        lws_callback_on_writable(wsi);
         return 0;
       case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
         return 0;
@@ -71,7 +152,6 @@ namespace tuum { namespace wsocs {
     return 0;
   }
 
-
   int WebSocketServer::cb_wsoc(lws *wsi, lws_callback_reasons reason,
                   void *user, void *in, size_t len)
   {
@@ -80,12 +160,24 @@ namespace tuum { namespace wsocs {
       case LWS_CALLBACK_ESTABLISHED:
         printf("[WSS:cb_wsoc]Connection established.\n");
         onConnect();
-        lws_callback_on_writable(wsi);
+        //lws_callback_on_writable(wsi);
         break;
       case LWS_CALLBACK_RECEIVE:
         onMessage(wsi, in, len);
         break;
       case LWS_CALLBACK_SERVER_WRITEABLE:
+        {
+          //WSProtocol::Event ev;
+
+          /*
+          ev.name = new char[8];
+          ev.data = new char[7];
+          strcpy(ev.name, "message");
+          strcpy(ev.data, "123456");
+          printf("DBG: %s, %s\n", ev.name, ev.data);
+          */
+
+        }
         lws_callback_on_writable(wsi);
         break;
     }
