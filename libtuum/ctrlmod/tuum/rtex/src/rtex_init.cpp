@@ -2,6 +2,7 @@
 #include "rtex.h"
 
 #include "tuum_platform.hpp"
+#include "tuum_lpx.hpp"
 
 #include "htgui.hpp"
 #include "RobotexUIServer.hpp"
@@ -20,6 +21,9 @@ int ui_init(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+  tuum::lpx::init();
+  tuum::lpx::setup();
+
   if(tuum::init(argc, argv) < 0) return -1;
 
   if(ui_init(argc, argv) < 0) RTXLOG("UI initialization failed!", LOG_ERR);

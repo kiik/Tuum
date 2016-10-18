@@ -1,0 +1,5 @@
+{
+  'includes': [
+    'libtuum/modules.gypi',
+  ],
+}
