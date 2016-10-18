@@ -21,7 +21,7 @@
       ],
 
       'include_dirs': [
-	'inc',
+        'inc',
       ],
       'sources': [
         'src/motion.cpp',
@@ -31,6 +31,7 @@
         'src/tuum_configuration.cpp',
         'src/tuum_logger.cpp',
         'src/tuum_platform.cpp',
+        'src/tuum_buff.cpp',
 
         'src/ProgramModule.cpp',
         'src/ModuleNet.cpp',

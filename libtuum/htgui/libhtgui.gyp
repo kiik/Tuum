@@ -13,7 +13,7 @@
         '--std=c++11',
       ],
       'variables': {
-            'pkg-config': 'pkg-config' 
+            'pkg-config': 'pkg-config'
       },
       'include_dirs': [
 	'inc',
@@ -25,11 +25,14 @@
         'libhal',
       ],
       'sources': [
-	'src/htgui.cpp',
-	'src/tuum_scripting.cpp',
-	'src/tuum_wsocs.cpp',
-	'src/WebSocketServer.cpp',
-	'src/WSProtocol.cpp',
+        'src/htgui.cpp',
+
+        'src/tuum_scripting.cpp',
+        'src/tuum_wsocs.cpp',
+        'src/tuum_http.cpp',
+
+        'src/WebSocketServer.cpp',
+        'src/WSProtocol.cpp',
       ],
 
       'direct_dependent_settings': {
