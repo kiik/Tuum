@@ -5,7 +5,7 @@
       'type': 'static_library',
 
       'includes': [
-	'src/phobos/hal.gypi'
+	'src/deimos/hal.gypi'
       ],
 
       'include_dirs': [
