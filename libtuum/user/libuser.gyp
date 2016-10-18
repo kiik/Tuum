@@ -9,15 +9,20 @@
       'includes': [
         'applications/dev/melx/usr.gyp'
       ],
-      'include_dirs': [
-	'inc'
-      ],
 
       'dependencies': [
         'libenv',
         'libhal',
         'libsystem',
         'librtxmath',
+      ],
+
+      'include_dirs': [
+        'inc',
+        'libraries'
+      ],
+      'sources': [
+        'libraries/STM.cpp'
       ],
 
       'direct_dependent_settings': {

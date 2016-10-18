@@ -23,7 +23,6 @@
     'src/rtex_init.cpp',
     'src/LogicManager.cpp',
     'src/RobotexUIServer.cpp',
-    'src/STM.cpp',
   ],
 
 }

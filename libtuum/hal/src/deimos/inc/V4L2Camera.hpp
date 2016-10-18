@@ -112,7 +112,7 @@ namespace tuum { namespace hal {
     int m_width, m_height, m_stride;
 
     int m_fd;
-    struct data_buf_t *m_bfs;
+    data_buf_t *m_bfs;
 
     unsigned int numberOfBuffers;
     size_t stride;

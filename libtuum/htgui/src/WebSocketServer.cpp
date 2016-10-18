@@ -10,6 +10,8 @@
 
 #include "tuum_wsocs.hpp"
 
+using namespace tuum::lpx;
+
 namespace tuum { namespace wsocs {
 
   typedef uint8_t* data_t;
@@ -18,15 +20,21 @@ namespace tuum { namespace wsocs {
   size_t t0 = 0;
   float dt = 0;
 
+  Frame frame;
+  bool done = false;
 
-  size_t read_data_stream(size_t lid, Glib::RefPtr<Gdk::Pixbuf>& out) {
+
+  size_t read_data_stream(size_t lid, Frame& out) {
     auto camera = hal::hw.getCamera();
-    auto frame = camera->getFrame();
 
-    if(frame.id == lid) return 0;
+    if(!done) {
+      frame = camera->getFrame();
+      done = true;
+    }
 
-    Frame frm = hal::toRGB(frame);
-    out = lpx::rgb_to_jpg(frm);
+    //if(frame.id == lid) return 0;
+
+    out = hal::toRGB(frame);
 
     return frame.id;
   }
@@ -47,19 +55,19 @@ namespace tuum { namespace wsocs {
   }
 
   void http_mjpeg_stream(lws *wsi) {
-    Glib::RefPtr<Gdk::Pixbuf> image;
 
-    size_t fid = read_data_stream(lframe, image);
+    Frame frm;
+    size_t fid = read_data_stream(lframe, frm);
     if(fid <= 0) return;
+
+    buffer_t img = lpx::rgb_to_jpg(frm);
+    delete(frm.data);
 
     fps();
     lframe = fid;
 
-    gchar* img_buf;
-    gsize img_len;
-    image->save_to_buffer(img_buf, img_len, "jpeg");
 
-    size_t len = img_len;
+    size_t len = img->size;
 
     lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
 
@@ -73,9 +81,7 @@ namespace tuum { namespace wsocs {
     std::string _head = head.str();
     lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
 
-    lws_write(wsi, (unsigned char*)img_buf, len, LWS_WRITE_HTTP);
-
-    g_free(img_buf);
+    lws_write(wsi, (unsigned char*)img->data, len, LWS_WRITE_HTTP);
   }
 
   WebSocketServer::WebSocketServer():
