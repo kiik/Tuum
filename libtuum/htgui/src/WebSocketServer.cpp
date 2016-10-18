@@ -55,32 +55,27 @@ namespace tuum { namespace wsocs {
   }
 
   void http_mjpeg_stream(lws *wsi) {
-
     Frame frm;
+
     size_t fid = read_data_stream(lframe, frm);
     if(fid <= 0) return;
+    lframe = fid;
+    fps();
 
     buffer_t img = lpx::rgb_to_jpg(frm);
     delete(frm.data);
 
-    fps();
-    lframe = fid;
-
-
-    size_t len = img->size;
-
     lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
 
+    size_t len = img->size;
     std::stringstream head;
-
     head << "X-Timestamp: " << millis() << std::endl;
     head << "Content-Length: " << len << std::endl;
     head << "Content-Type: " << "image/jpeg" << std::endl;
     head << std::endl; // End of header
-
     std::string _head = head.str();
-    lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
 
+    lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
     lws_write(wsi, (unsigned char*)img->data, len, LWS_WRITE_HTTP);
   }
 
