@@ -8,11 +8,25 @@
 #include "hal.hpp"
 #include "lpx_iformat.hpp"
 
+#include "tuum_streams.hpp"
 #include "tuum_wsocs.hpp"
 
 using namespace tuum::lpx;
 
 namespace tuum { namespace wsocs {
+
+  long long stat_time = 0;
+  size_t stat_seq = 0;
+
+  void stat_begin() {
+    if(stat_seq > 2) return;
+    stat_time = micros();
+  }
+
+  void stat_end() {
+    if(stat_seq > 2) return;
+    printf("stat(%lu): %llu us\n", stat_seq++, (micros() - stat_time));
+  }
 
   typedef uint8_t* data_t;
 
@@ -20,23 +34,26 @@ namespace tuum { namespace wsocs {
   size_t t0 = 0;
   float dt = 0;
 
-  Frame frame;
+  ImageStream* camStream;
   bool done = false;
 
 
-  size_t read_data_stream(size_t lid, Frame& out) {
-    auto camera = hal::hw.getCamera();
-
+  size_t read_data_stream(size_t lid, image_t& out) {
     if(!done) {
-      frame = camera->getFrame();
+      auto camera = hal::hw.getCamera();
+      camStream = camera->getStream();
       done = true;
     }
 
-    //if(frame.id == lid) return 0;
+    if(lframe == camStream->getSeq()) return 0;
 
-    out = hal::toRGB(frame);
+    auto f = camStream->getFrame();
 
-    return frame.id;
+    stat_begin();
+    out = hal::toRGB(f);
+    stat_end();
+
+    return camStream->getSeq();
   }
 
   void fps() {
@@ -54,20 +71,7 @@ namespace tuum { namespace wsocs {
     lws_write(wsi, (unsigned char*)mjpeg_head, strlen(mjpeg_head), LWS_WRITE_HTTP);
   }
 
-  void http_mjpeg_stream(lws *wsi) {
-    Frame frm;
-
-    size_t fid = read_data_stream(lframe, frm);
-    if(fid <= 0) return;
-    lframe = fid;
-    fps();
-
-    buffer_t img = lpx::rgb_to_jpg(frm);
-    delete(frm.data);
-
-    lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
-
-    size_t len = img->size;
+  void http_mjpeg_frame(lws *wsi, size_t len) {
     std::stringstream head;
     head << "X-Timestamp: " << millis() << std::endl;
     head << "Content-Length: " << len << std::endl;
@@ -76,6 +80,24 @@ namespace tuum { namespace wsocs {
     std::string _head = head.str();
 
     lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
+  }
+
+  void http_mjpeg_stream(lws *wsi) {
+    image_t img;
+
+    size_t fid = read_data_stream(lframe, img);
+
+    if(fid <= 0) return;
+    lframe = fid;
+    fps();
+
+    img = lpx::rgb_to_jpg(img);
+
+    lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
+
+    size_t len = img->size;
+
+    http_mjpeg_frame(wsi, len);
     lws_write(wsi, (unsigned char*)img->data, len, LWS_WRITE_HTTP);
   }
 

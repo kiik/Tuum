@@ -27,11 +27,15 @@ namespace tuum { namespace hal {
       return;
     }
 
+    m_stream.init(m_width, m_height, 3);
+
+    /*
     m_frame.width = m_width;
     m_frame.height = m_height;
     m_frame.size = m_width * m_height * 3;
     m_frame.data = (unsigned char *)malloc(m_frame.size * sizeof(char));
     m_frame.id = 0;
+    */
 
     if(startCapture() < 0) {
       printf(":V4L2Camera::setup: Error - 'startCapture()'!");
@@ -47,26 +51,35 @@ namespace tuum { namespace hal {
     });*/
 
     while(!m_lock.try_lock()) {};
-    int res = captureFrame(m_frame);
+    int res = captureFrame(&m_stream);
     if(res >= 0) {
-      m_frame.id++;
+      m_stream.incSeq();
     } else {
       printf(":Camera::process: Error - 'captureFrame' code %i\n", res);
     }
     m_lock.unlock();
   }
 
-  const Frame& Camera::getFrame() {
+  image_t Camera::getFrame() {
     while(!m_lock.try_lock()) {};
     m_lock.unlock();
-    return m_frame;
+
+    /*
+    Frame out;
+    size_t len = m_stream.getSize();
+    out.data = (uint8_t*)malloc(len);
+
+    uint8_t* dat = (uint8_t*)(m_stream.getFrame()->data);
+    std::copy(dat, dat + len, out.data);
+    */
+
+    return m_stream.getFrame();
   }
 
-  int Camera::requestFrame(Frame& out) {
-    if(!m_lock.try_lock()) return -1;
-    out = m_frame;
+  ImageStream* Camera::getStream() {
+    while(!m_lock.try_lock()) {};
     m_lock.unlock();
-    return 0;
+    return &m_stream;
   }
 
   void Camera::begin() {

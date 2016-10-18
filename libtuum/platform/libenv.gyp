@@ -24,15 +24,20 @@
 	'inc',
       ],
       'sources': [
-	'src/motion.cpp',
-	'src/platform.cpp',
-	'src/tuum_communication.cpp',
-	'src/tuum_configuration.cpp',
-	'src/tuum_logger.cpp',
-	'src/tuum_platform.cpp',
-	'src/ProgramModule.cpp',
-	'src/ModuleNet.cpp',
-	'src/ResourceNetwork.cpp',
+        'src/motion.cpp',
+        'src/platform.cpp',
+
+        'src/tuum_communication.cpp',
+        'src/tuum_configuration.cpp',
+        'src/tuum_logger.cpp',
+        'src/tuum_platform.cpp',
+
+        'src/ProgramModule.cpp',
+        'src/ModuleNet.cpp',
+        'src/ResourceNetwork.cpp',
+
+        'src/strms/DataStream.cpp',
+        'src/strms/ImageStream.cpp',
       ],
 
       'direct_dependent_settings': {

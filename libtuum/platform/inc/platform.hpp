@@ -14,7 +14,8 @@
 
 #include "platform.t.hpp"
 
-unsigned long int millis();
+size_t millis();
+long long micros();
 
 struct Timer {
   unsigned long int _start = 0;

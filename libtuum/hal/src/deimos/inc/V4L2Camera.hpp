@@ -19,13 +19,12 @@
 #include <linux/videodev2.h>
 
 #include "cameraConstants.hpp"    // CameraBase constants
-#include "ibuf.hpp"
 
-#include "DataStream.hpp"
-#include "CameraDevice.hpp"
-
+#include "tuum_buff.hpp"
+#include "tuum_streams.hpp"
 #include "tuum_platform.hpp"
 
+#include "CameraDevice.hpp"
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -90,8 +89,6 @@ namespace tuum { namespace hal {
     int getWidth() const;
     int getHeight() const;
 
-    const Frame& getFrame(unsigned int timeout = 1000);
-
     struct buf_info {
       int index;
       unsigned int length;
@@ -112,7 +109,7 @@ namespace tuum { namespace hal {
     int m_width, m_height, m_stride;
 
     int m_fd;
-    data_buf_t *m_bfs;
+    buf_t *m_bfs;
 
     unsigned int numberOfBuffers;
     size_t stride;
@@ -130,7 +127,7 @@ namespace tuum { namespace hal {
     int initBuffer();
     int startCapture();
 
-    int captureFrame(Frame&);
+    int captureFrame(ImageStream*);
     int stopCapture();
     void closeDevice();
 

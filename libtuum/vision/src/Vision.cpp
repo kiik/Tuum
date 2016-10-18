@@ -455,9 +455,9 @@ namespace tuum {
 
       std::vector<std::vector<std::vector<bool>>> visited(8, std::vector<std::vector<bool>>(CAMERA_WIDTH, std::vector<bool>(CAMERA_HEIGHT, false))); // TODO: Optimise
 
-      unsigned char *pixels = frame.data;
+      unsigned char *pixels = (unsigned char*)frame->data;
       unsigned int channels = 3;
-      unsigned int stride = frame.width * channels;
+      unsigned int stride = frame->width * channels;
 
       for (std::vector<unsigned int>::const_iterator mode = modeList.begin(); mode != modeList.end(); ++mode) {
 

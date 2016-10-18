@@ -19,13 +19,12 @@
 #include <linux/videodev2.h>
 
 #include "cameraConstants.hpp"    // CameraBase constants
-#include "ibuf.hpp"
-
-#include "DataStream.hpp"
-#include "CameraDevice.hpp"
 
 #include "tuum_platform.hpp"
+#include "tuum_buff.hpp"
+#include "tuum_streams.hpp"
 
+#include "CameraDevice.hpp"
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 

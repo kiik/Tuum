@@ -15,7 +15,6 @@
     'src/Hardware.cpp',
     'src/MainBoard.cpp',
     'src/Camera.cpp',
-    'src/DataStream.cpp',
     'src/MotorControl.cpp',
     'src/MotorDriver.cpp',
     'src/RefereeListener.cpp',

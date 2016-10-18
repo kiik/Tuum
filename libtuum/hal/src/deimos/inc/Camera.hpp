@@ -10,8 +10,7 @@
 
 namespace tuum { namespace hal {
 
-  static void convertYCbCrtoRGB(const unsigned char *src, unsigned char *dest,
-                                 int width, int height)
+  static void conv_YCbCr_to_RGB(const uint8_t* src, uint8_t* dest, int width, int height)
   {
     int j;
     while (--height >= 0) {
@@ -30,21 +29,10 @@ namespace tuum { namespace hal {
     }
   }
 
-  static Frame toRGB(const Frame &frame) {
-    Frame rgbFrame;
-    rgbFrame.data = (unsigned char *) malloc(frame.size * sizeof(char));
-
-    std::copy(frame.data, frame.data + frame.size, rgbFrame.data);
-
-    rgbFrame.width = frame.width;
-    rgbFrame.height = frame.height;
-    rgbFrame.size = frame.size;
-
-    convertYCbCrtoRGB((unsigned char *) frame.data,
-                             rgbFrame.data,
-                             rgbFrame.width,
-                             rgbFrame.height);
-    return rgbFrame;
+  static image_t toRGB(const image_t& in) {
+    image_t out(new img_buf_t(in->width, in->height, in->stride));
+    conv_YCbCr_to_RGB((uint8_t*)in->data, (uint8_t*)out->data, in->width, in->height);
+    return out;
   }
 
 
@@ -60,11 +48,11 @@ namespace tuum { namespace hal {
     void loop();
     void end();
 
-    const Frame& getFrame();
-    int requestFrame(Frame&);
+    image_t getFrame();
+    ImageStream* getStream();
 
   private:
-    Frame m_frame;
+    ImageStream m_stream;
     boost::mutex m_lock;
 
   };

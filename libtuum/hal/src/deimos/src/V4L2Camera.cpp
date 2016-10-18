@@ -233,7 +233,7 @@ namespace tuum { namespace hal {
     return buffer.index;
   }
 
-  int CameraBase::captureFrame(Frame& frame)
+  int CameraBase::captureFrame(ImageStream* out)
   {
     size_t timeout = 1000;
     while (true) {
@@ -261,7 +261,8 @@ namespace tuum { namespace hal {
 
       int index = frameRead();
       if (index > 0) {
-        formatFrame((unsigned char *)m_bfs[index].data, frame.data, m_width, m_height, m_stride);
+        formatFrame((uint8_t*)m_bfs[index].data, (uint8_t*)out->getBack()->data, m_width, m_height, m_stride);
+        out->swap();
         return 0;
       }
     }
