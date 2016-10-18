@@ -5,8 +5,8 @@
  *  @version 0.1
  */
 
-#ifndef RTX_CAMERA_H
-#define RTX_CAMERA_H
+#ifndef RTX_CAMERA_DEV_H
+#define RTX_CAMERA_DEV_H
 
 namespace tuum { namespace hal {
 
@@ -14,18 +14,15 @@ namespace tuum { namespace hal {
 
   class CameraDevice {
     public:
-      virtual void init() = 0;
-      //virtual void dispose();
-
+      virtual void setup() = 0;
       virtual void process() = 0;
 
       virtual void begin() = 0;
       virtual void loop() = 0;
       virtual void end() = 0;
 
-      virtual bool getFrame(int&) = 0;  // Frame read function
   };
 
 }};
 
-#endif // RTX_CAMERA_H
+#endif // RTX_CAMERA_DEV_H
