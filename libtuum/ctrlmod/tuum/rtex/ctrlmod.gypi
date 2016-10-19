@@ -20,7 +20,10 @@
     'src/rtx_ctl.cpp',
     'src/rtx_fb.cpp',
     'src/rtx_tfb.cpp',
+    'src/rtx_cmds.cpp',
+
     'src/rtex_init.cpp',
+
     'src/LogicManager.cpp',
     'src/RobotexUIServer.cpp',
   ],

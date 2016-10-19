@@ -5,7 +5,8 @@
       'type': 'executable',
 
       'includes': [
-	'tuum/rtex/ctrlmod.gypi'
+        '../build/common.gypi',
+        'tuum/rtex/ctrlmod.gypi'
       ],
 
       'libraries': [

@@ -5,6 +5,8 @@
 
 #include <string>
 #include <sstream>
+#include <map>
+
 #include <libwebsockets.h>
 
 #include "platform.hpp"
@@ -15,6 +17,14 @@ namespace tuum { namespace wsocs {
   public:
     typedef unsigned char* data_t;
     typedef uint16_t msg_id_t;
+
+    enum cmd_t {
+      ECMD_None,
+
+      ECMD_Drive, // Manual control
+    };
+
+    typedef std::map<std::string, cmd_t> cmd_map_t;
 
     struct Packet {
       void* ptr;
@@ -84,8 +94,12 @@ namespace tuum { namespace wsocs {
       return 0;
     }
 
-  private:
+  public:
+    static const char* JSON_CMD_TAG;
 
+    static cmd_map_t gCmdMap;
+
+    static cmd_t parseCommand(const std::string&);
 
   };
 

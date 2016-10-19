@@ -3,17 +3,21 @@
 #include <glib.h>
 #include <gtkmm.h>
 
-#include "WSProtocol.hpp"
 
 #include "hal.hpp"
 #include "lpx_iformat.hpp"
 
+#include "tuum_wsproto.hpp"
 #include "tuum_http.hpp"
 #include "tuum_wsocs.hpp"
+
+#include "WSContext.hpp"
 
 using namespace tuum::lpx;
 
 namespace tuum { namespace wsocs {
+
+  WSContext wsCtx;
 
   typedef uint8_t* data_t;
 
@@ -69,18 +73,37 @@ namespace tuum { namespace wsocs {
 
   int WebSocketServer::cb_http(lws *wsi, lws_callback_reasons reason, void *user, void *in, size_t len)
   {
+    WSContext::id_t* cId = (size_t*)user;
+
     switch(reason) {
+      case LWS_CALLBACK_FILTER_HTTP_CONNECTION:
+        {
+          WSContext::ctx_t ctx = wsCtx.createContext();
+          printf("[WSS:cb_http]New connection id=%lu.\n", ctx->id);
+          *cId = ctx->id;
+          wsCtx.insert(ctx);
+        }
+
+        return 0;
       case LWS_CALLBACK_HTTP:
-        printf("[WSS:cb_http]New connection.\n");
+
         http::mjpeg_headers(wsi);
         lws_callback_on_writable(wsi);
+
         return 0;
       case LWS_CALLBACK_HTTP_FILE_COMPLETION:
         return 0;
       case LWS_CALLBACK_HTTP_WRITEABLE:
-        http::mjpeg_stream(wsi);
-        lws_callback_on_writable(wsi);
+      {
+        WSContext::ctx_t ctx;
+        if(wsCtx.find(*cId, ctx) >= 0) {
+          http::mjpeg_stream(wsi);
+          lws_callback_on_writable(wsi);
+        } else {
+          printf("[WSS:cb_http]Unknown id %lu.\n", *cId);
+        }
         return 0;
+      }
       case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
         return 0;
       default:
@@ -90,12 +113,58 @@ namespace tuum { namespace wsocs {
     return 0;
   }
 
-  int WebSocketServer::cb_wsoc(lws *wsi, lws_callback_reasons reason, void *user, void *in, size_t len)
+  int WebSocketServer::cb_wsjs(lws *wsi, lws_callback_reasons reason, void *user, void *in, size_t len)
   {
     uint8_t *raw = (uint8_t*)in;
     switch(reason) {
       case LWS_CALLBACK_ESTABLISHED:
-        printf("[WSS:cb_wsoc]Connection established.\n");
+        printf("[WSS:cb_wsjs]Connection established.\n");
+        onConnect();
+        //lws_callback_on_writable(wsi);
+        break;
+      case LWS_CALLBACK_RECEIVE:
+        {
+          if(len <= 0) break;
+
+          //printf("[WSS:cb_wsjs]Data: %s\n", (char*)in);
+          json data = json::parse((char*)in);
+
+          auto it = data.find("c");
+          if((it != data.end()) && (it.value().is_string())) {
+            std::string str = it.value();
+            //printf("cmd: %s\n", (char*)in);
+            //printf("a: %s\n", data.dump().c_str());
+
+            onMessage(wsi, data);
+          }
+         }
+        break;
+      case LWS_CALLBACK_SERVER_WRITEABLE:
+        {
+          //WSProtocol::Event ev;
+
+          /*
+          ev.name = new char[8];
+          ev.data = new char[7];
+          strcpy(ev.name, "message");
+          strcpy(ev.data, "123456");
+          printf("DBG: %s, %s\n", ev.name, ev.data);
+          */
+
+        }
+        lws_callback_on_writable(wsi);
+        break;
+    }
+
+    return 0;
+  }
+
+  int WebSocketServer::cb_wsbin(lws *wsi, lws_callback_reasons reason, void *user, void *in, size_t len)
+  {
+    uint8_t *raw = (uint8_t*)in;
+    switch(reason) {
+      case LWS_CALLBACK_ESTABLISHED:
+        printf("[WSS:cb_wsbin]Connection established.\n");
         onConnect();
         //lws_callback_on_writable(wsi);
         break;

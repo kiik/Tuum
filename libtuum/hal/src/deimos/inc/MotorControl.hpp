@@ -24,7 +24,9 @@ namespace tuum { namespace hal {
 
     void init(RTX485::WriteHandle);
 
-    void OmniDrive(double speed, double angle, double rot);
+    // mm / s, radians, deg / s
+    void omniDrive(float, float, float);
+
     void stop();
 
     std::string getSpeedCmd(int v);

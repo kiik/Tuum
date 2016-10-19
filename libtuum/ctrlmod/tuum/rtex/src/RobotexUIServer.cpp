@@ -3,6 +3,10 @@
 
 #include "RobotexUIServer.hpp"
 
+#include "rtx_cmds.hpp"
+
+using namespace tuum::wsocs;
+
 namespace tuum { namespace gui {
 
   void RobotexUIServer::onGet()
@@ -14,51 +18,6 @@ namespace tuum { namespace gui {
   {
 
   }
-
-
-  // Tuum Websocket Protocol
-  class WSProtocol {
-  public:
-    typedef unsigned char* data_t;
-    typedef uint16_t mid_t;
-
-    struct __attribute__((packed)) Request {
-      mid_t id;
-      uint8_t cmd;
-
-      void* getData() { return (&(this->cmd)) + 1; }
-    };
-
-    struct __attribute__((packed)) Response {
-      mid_t id;
-    };
-
-    template<typename T>
-    static int send(lws *wsi, Request*& req, T dat) {
-      Response res;
-      res.id = req->id;
-
-      int len = sizeof(res) + sizeof(dat);
-
-      data_t buf = (data_t)malloc(LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING);
-
-      data_t dst = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-      memcpy(dst, (data_t)&res, sizeof(res));
-      dst += sizeof(res);
-      memcpy(dst, (data_t)&dat, sizeof(dat));
-
-      lws_write(wsi, &buf[LWS_SEND_BUFFER_PRE_PADDING], len, LWS_WRITE_BINARY);
-      free(buf);
-
-      return 0;
-    }
-
-  };
-
-  struct CModeData {
-    uint8_t manual = 1;
-  };
-
 
   void RobotexUIServer::onMessage(lws *wsi, void *in, size_t len)
   {
@@ -72,6 +31,34 @@ namespace tuum { namespace gui {
         if((req->cmd != ECommand::None) && (req->cmd < ECommand::CMD_N)) {
           printf("[WSUI]Warning: unhandled command '%i'!\n", req->cmd);
         }
+        break;
+    }
+  }
+
+  void RobotexUIServer::onMessage(lws *wsi, json data)
+  {
+    auto it = data.find(WSProtocol::JSON_CMD_TAG);
+    if(it == data.end()) return;
+    if(!it.value().is_string()) return;
+
+    std::string str = it.value();
+    WSProtocol::cmd_t cmd = WSProtocol::parseCommand(str);
+    if(cmd == WSProtocol::ECMD_None) return;
+
+    //RTXLOG(format("'onMessage'"), LOG_DEBUG);
+    route(cmd, data);
+  }
+
+  void RobotexUIServer::route(WSProtocol::cmd_t cmd, json data)
+  {
+    switch(cmd) {
+      case WSProtocol::ECMD_Drive:
+      {
+        tuum::cmds::drive(data["s"], data["d"].get<float>() / 1000.0, data["r"]);
+        break;
+      }
+      case WSProtocol::ECMD_None:
+      default:
         break;
     }
   }

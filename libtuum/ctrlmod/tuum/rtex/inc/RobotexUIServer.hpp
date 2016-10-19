@@ -2,7 +2,13 @@
 #ifndef RTX_UI_H
 #define RTX_UI_H
 
+#include "json.hpp"
+
+#include "tuum_wsproto.hpp"
+
 #include "WebSocketServer.hpp"
+
+using namespace tuum::wsocs;
 
 namespace tuum { namespace gui {
 
@@ -24,6 +30,9 @@ namespace tuum { namespace gui {
 
     void onConnect();
     void onMessage(lws*, void*, size_t);
+    void onMessage(lws*, json);
+
+    void route(WSProtocol::cmd_t, json);
 
   };
 

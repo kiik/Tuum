@@ -76,7 +76,7 @@ namespace tuum { namespace TFBLogic {
     ref->registerCallback(REF_STOP, [=](RefCommand rcmd){
       stop();
       Motion::stop();
-      hw.getMotorControl()->OmniDrive(0, 0.0, 0);
+      hw.getMotorControl()->omniDrive(0, 0.0, 0);
       MainBoard* mb = hw.getMainBoard();
       mb->stopDribbler();
     });

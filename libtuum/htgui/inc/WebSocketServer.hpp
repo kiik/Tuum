@@ -4,7 +4,10 @@
 
 #include <libwebsockets.h>
 
+#include "json.hpp"
 #include "tuum_platform.hpp"
+
+using json = nlohmann::json;
 
 namespace tuum { namespace wsocs {
 
@@ -20,7 +23,10 @@ namespace tuum { namespace wsocs {
     int cb_http(lws *wsi, lws_callback_reasons reason,
                     void *user, void *in, size_t len);
 
-    int cb_wsoc(lws *wsi, lws_callback_reasons reason,
+    int cb_wsjs(lws *wsi, lws_callback_reasons reason,
+                    void *user, void *in, size_t len);
+
+    int cb_wsbin(lws *wsi, lws_callback_reasons reason,
                     void *user, void *in, size_t len);
 
   private:
@@ -42,7 +48,8 @@ namespace tuum { namespace wsocs {
     virtual void onGet() {};
 
     virtual void onConnect() {};
-    virtual void onMessage(lws *wsi, void* in, size_t len) {};
+    virtual void onMessage(lws*, void*, size_t) {};
+    virtual void onMessage(lws*, json) {};
   };
 
 }}

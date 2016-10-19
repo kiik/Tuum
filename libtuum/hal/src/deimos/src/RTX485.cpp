@@ -9,6 +9,8 @@
 #include <string>
 #include <cstdlib>
 
+#include "tuum_logger.hpp"
+
 #include "RTX485.hpp"
 
 namespace tuum { namespace hal {
@@ -27,17 +29,18 @@ namespace tuum { namespace hal {
       m_dataBuf += c;
 
       if(c == '\n') {
-	Message msg;
-	if(processData(m_dataBuf, msg) < 0) return;
+        Message msg;
+        if(processData(m_dataBuf, msg) < 0) return;
         signal(msg);
-	m_dataBuf = "";
+        m_dataBuf = "";
       }
     }
   }
 
   void RTX485::sendCommand(DeviceID id, std::string cmd) {
     std::stringstream data;
-    data << (unsigned int)id << ":" << cmd << '\n';
+    data << '<' << (unsigned int)id << ":" << cmd << ">\n";
+    //RTXLOG(format("%s", data.str()), LOG_DEBUG);
     write_some(data.str());
   }
 

@@ -11,7 +11,9 @@ namespace tuum { namespace wsocs {
 
   int cb_http_proxy(lws *wsi, lws_callback_reasons reason,
                   void *user, void *in, size_t len);
-  int cb_wsoc_proxy(lws *wsi, lws_callback_reasons reason,
+  int cb_wsjs_proxy(lws *wsi, lws_callback_reasons reason,
+                  void *user, void *in, size_t len);
+  int cb_wsbin_proxy(lws *wsi, lws_callback_reasons reason,
                   void *user, void *in, size_t len);
 
   extern lws_protocols gProtocols[];

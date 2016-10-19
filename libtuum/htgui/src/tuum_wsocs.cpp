@@ -16,21 +16,30 @@ namespace tuum { namespace wsocs {
     if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_http(wsi, reason, user, in, len);
   }
 
-  int cb_wsoc_proxy(lws *wsi, lws_callback_reasons reason,
+  int cb_wsjs_proxy(lws *wsi, lws_callback_reasons reason,
                   void *user, void *in, size_t len) {
-    if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_wsoc(wsi, reason, user, in, len);
+    if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_wsjs(wsi, reason, user, in, len);
   }
 
+  int cb_wsbin_proxy(lws *wsi, lws_callback_reasons reason,
+                  void *user, void *in, size_t len) {
+    if(wsock_srvs[0] != nullptr) wsock_srvs[0]->cb_wsbin(wsi, reason, user, in, len);
+  }
 
   lws_protocols gProtocols[] = {
     {
       "http-only",
       cb_http_proxy,
+      sizeof(size_t),
+    },
+    {
+      "ws-json",
+      cb_wsjs_proxy,
       0
     },
     {
       "ws-binary",
-      cb_wsoc_proxy,
+      cb_wsbin_proxy,
       0
     },
     {

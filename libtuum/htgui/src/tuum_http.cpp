@@ -89,7 +89,7 @@ namespace tuum { namespace http {
 
     if(fid <= 0) return;
     lframe = fid;
-    fps();
+    //fps();
 
     img = lpx::rgb_to_jpg(img);
 
