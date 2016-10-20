@@ -11,26 +11,24 @@
 namespace tuum {
 
   ImageStream::ImageStream():
-    m_width(0), m_height(0), m_stride(0)
+    m_iprop({0, 0, 0, 0})
   {
 
   }
 
-  ImageStream::ImageStream(size_t w, size_t h, size_t s)
+  ImageStream::ImageStream(const img_prop_t& iprop)
   {
-    init(w, h, s);
+    init(iprop);
   }
 
-  int ImageStream::init(size_t w, size_t h, size_t s)
+  int ImageStream::init(const img_prop_t& iprop)
   {
-    m_width = w;
-    m_height = h;
-    m_stride = s;
-    int res = StreamBase<image_t>::init(w * h * s);
+    m_iprop = iprop;
+    int res = StreamBase<image_t>::init(m_iprop.getSize());
     if(res < 0) return res;
 
-    m_b1->setDimensions(w, h, s);
-    m_b2->setDimensions(w, h, s);
+    m_b1->setFormat(m_iprop);
+    m_b2->setFormat(m_iprop);
     return res;
   }
 
@@ -41,7 +39,7 @@ namespace tuum {
 
   image_t ImageStream::getFrameCopy()
   {
-    image_t out(new img_buf_t(m_width, m_height, m_stride));
+    image_t out(new img_buf_t(m_iprop));
 
     if(!m_init) {
       memset(out->data, 255, m_size);
@@ -50,7 +48,18 @@ namespace tuum {
       src->paste(&(*dst));
     }
 
+    out->setFormat(m_iprop);
+    out->id = getSeq();
+
     return out;
+  }
+
+  int ImageStream::read(image_t out) {
+    out->init(getSize());
+    out->setFormat(m_iprop);
+    out->id = getSeq();
+
+    return StreamBase<image_t>::read(out->data, out->size);
   }
 
 }

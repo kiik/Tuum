@@ -25,7 +25,6 @@ namespace tuum {
     ~DataStream();
 
     buffer_t getData() { return m_fr; }
-
   };
 
 }

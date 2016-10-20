@@ -28,6 +28,8 @@ namespace tuum {
     virtual void postDeinit() {};
 
     int write(void*, size_t);
+    int read(void*&, size_t&);
+
     void swap();
 
     size_t getSize();
@@ -37,18 +39,21 @@ namespace tuum {
 
     T* getStream();
 
+    size_t getSeq() { return m_packet_seq; }
+    void incSeq() { m_packet_seq++; }
+
   protected:
     T m_b1, m_b2;
     T m_fr, m_bk;
 
-    size_t m_size, m_progress;
+    size_t m_size, m_progress, m_packet_seq;
     bool m_init;
   };
 
   template<typename T>
   StreamBase<T>::StreamBase():
     m_b1(nullptr), m_b2(nullptr),
-    m_size(0), m_progress(0),
+    m_size(0), m_progress(0), m_packet_seq(0),
     m_init(false)
   {
 
@@ -101,6 +106,12 @@ namespace tuum {
   }
 
   template<typename T>
+  int StreamBase<T>::read(void*& ptr, size_t& len) {
+    memcpy((uint8_t*)ptr, (uint8_t*)m_fr->data, len);
+    return 0;
+  }
+
+  template<typename T>
   void StreamBase<T>::swap() {
     if(m_fr == m_b1) {
       m_fr = m_b2;
@@ -111,6 +122,7 @@ namespace tuum {
     }
 
     m_progress = 0;
+    incSeq();
   }
 
   template<typename T>

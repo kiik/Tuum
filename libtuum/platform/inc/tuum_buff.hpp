@@ -12,16 +12,28 @@
 #include <memory>
 #include <cstring>
 
+#include "tuum_logger.hpp"
+
 namespace tuum {
+
+  struct img_prop_t {
+    size_t width, height,
+           stride, bytesPerPixel;
+
+    size_t getSize() {
+      return width * height * bytesPerPixel;
+    }
+
+  };
 
   extern int bf_id_seq;
 
   struct buf_base_t
   {
-    int m_id;
+    int m_id = 0;
 
-    void *data;
-    size_t size;
+    void *data = nullptr;
+    size_t size = 0;
 
     buf_base_t():
       data(nullptr), size(0)
@@ -35,9 +47,12 @@ namespace tuum {
 
     template<typename T = uint8_t>
     void init(size_t s) {
-      deinit();
+      if(size != s) {
+        deinit();
+        data = new T[s];
+      }
+
       size = s;
-      data = new T[size];
       m_id = bf_id_seq++;
     }
 
@@ -55,7 +70,12 @@ namespace tuum {
     }
 
     void paste(buf_base_t* out) {
-      memcpy((uint8_t*)out->data, (uint8_t*)data, size);
+      paste(*out);
+    }
+
+    void paste(buf_base_t& out) {
+      out.init(size);
+      memcpy((uint8_t*)out.data, (uint8_t*)data, size);
     }
 
   };
@@ -76,41 +96,40 @@ namespace tuum {
 
   struct img_buf_t : public buf_base_t
   {
-    size_t width, height;
-    size_t stride;
+    img_prop_t frm;
     size_t id;
 
     img_buf_t():
-      width(0), height(0), stride(0),
+      frm({0, 0, 0, 0}),
       id(0)
     {
 
     }
 
     img_buf_t(size_t size):
-      width(0), height(0), stride(0),
+      frm({0, 0, 0, 0}),
       id(0)
     {
       init(size);
     }
 
-    img_buf_t(size_t w, size_t h, size_t s = 3):
-      width(w), height(h), stride(s)
+    img_buf_t(const img_prop_t& _frm):
+      frm(_frm)
     {
-      init(w * h * s);
+      init(frm.getSize());
     }
 
-    void setDimensions(size_t w, size_t h, size_t s) {
-      width = w;
-      height = h;
-      stride = s;
+    void setFormat(const img_prop_t& _frm) { frm = _frm; }
+    void setFormat(const img_buf_t& in) { frm = in.frm; }
+
+    void paste(img_buf_t& in) {
+      buf_base_t::paste(in);
+      in.setFormat(frm);
+      in.m_id = m_id;
+      in.id = id;
     }
 
-    void setDimensions(const img_buf_t& in) {
-      width = in.width;
-      height = in.height;
-      stride = in.stride;
-    }
+    size_t getSize() { return frm.getSize(); }
 
   };
 
@@ -122,12 +141,12 @@ namespace tuum {
 
   namespace Env {
 
-    static int spawnBuffer(buffer_t& buf, size_t s) {
+    static int spawnBuffer(buffer_t& buf, size_t s = 0) {
       buf = std::make_shared<buf_t>(s);
       return 0;
     }
 
-    static int spawnBuffer(image_t& buf, size_t s) {
+    static int spawnBuffer(image_t& buf, size_t s = 0) {
       buf = std::make_shared<img_buf_t>(s);
       return 0;
     }

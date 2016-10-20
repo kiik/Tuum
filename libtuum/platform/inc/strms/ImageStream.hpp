@@ -20,23 +20,19 @@ namespace tuum {
   {
   public:
     ImageStream();
-    ImageStream(size_t, size_t, size_t = 3);
+    ImageStream(const img_prop_t&);
 
-    int init(size_t, size_t, size_t);
+    int init(const img_prop_t&);
 
-    size_t getWidth() { return m_width; }
-    size_t getHeight() { return m_height; }
-    size_t getStride() { return m_stride; }
-
-    size_t getSeq() { return m_seq; }
-    void incSeq() { m_seq++; }
+    const img_prop_t& getFormat() { return m_iprop; }
 
     const image_t& getFrame();
     image_t getFrameCopy();
 
+    int read(image_t);
+
   protected:
-    size_t m_width, m_height, m_stride;
-    size_t m_seq;
+    img_prop_t m_iprop;
   };
 
 }
