@@ -25,6 +25,7 @@ namespace tuum { namespace hal {
   }
 
   void Hardware::init() {
+    RTXLOG("Loading video streams...\n");
     std::ifstream frontCameraDevice(gC.getStr("Vision.FirstCamera"));
     if (frontCameraDevice.good())
       m_frontCamera = new Camera(gC.getStr("Vision.FirstCamera"), CAMERA_WIDTH, CAMERA_HEIGHT);
@@ -35,14 +36,14 @@ namespace tuum { namespace hal {
       m_backCamera = new Camera(gC.getStr("Vision.SecondCamera"), CAMERA_WIDTH, CAMERA_HEIGHT);
 
     if(gC.getStr("HW.Active") == "Y") {
-      printf("[Hardware::init]Loading hardware...\n");
+      RTXLOG("Loading modules...\n");
       HWBus.init(gC.getStr("HWBus.Port").c_str(), gC.getInt("HWBus.Baud"));
       //m_refereeListener.init(gC.getStr("RefModule.Port").c_str(), gC.getInt("RefModule.Baud"));
 
       m_motorControl.init(hw_bus_write);
       //m_mainBoard.init(hw_bus_write, hw_bus_register);
     } else {
-      printf("[Hardware::init]Hardware not active.\n");
+      RTXLOG("Hardware not active.\n", LOG_WARN);
     }
   }
 

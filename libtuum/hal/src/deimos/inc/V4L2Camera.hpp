@@ -1,13 +1,9 @@
-/**
- *  @file V4L2CameraBase.hpp
- *  CameraBase class
- *  Class for communication with the robot's cameras, based on the V4L2 API.
- *  The video capture example provided with the V4L2 API has been used as a
- *  model for the class.
+/** @file V4L2CameraBase.hpp
+ *  @brief V4L2 driver interface in the form of a base 'Camera' class.
  *
- *  @authors Ants-Oskar Mäesalu
+ *  @authors Meelik Kiik
+ *  @date 21. October 2016
  *  @version 0.1
- *  @date 5 December 2015
  */
 
 #ifndef RTX_V4L2_CAMERA_H
@@ -20,6 +16,7 @@
 
 #include "cameraConstants.hpp"    // CameraBase constants
 
+#include "tuum_logger.hpp"
 #include "tuum_buff.hpp"
 #include "tuum_streams.hpp"
 #include "tuum_platform.hpp"
@@ -58,6 +55,7 @@ static int xioctl(int m_fd, unsigned long int request, void *arg) {
   return result;
 }
 
+// Deinterlace
 static void formatFrame(const unsigned char *source, unsigned char *destination,
                         int width, int height, int stride) {
   while (--height >= 0) {
@@ -81,13 +79,15 @@ namespace tuum { namespace hal {
     static const int CAPTURE_MAX_BUFFER = 5;
 
   public:
-    CameraBase(const std::string&, const int&, const int&);
+    CameraBase(const std::string&, const size_t&, const size_t&);
     virtual ~CameraBase();
 
     std::string getDevice() const;
 
-    int getWidth() const;
-    int getHeight() const;
+    size_t getWidth() const;
+    size_t getHeight() const;
+
+    img_prop_t getFormat() const;
 
     struct buf_info {
       int index;
@@ -106,7 +106,7 @@ namespace tuum { namespace hal {
 
   protected:
     std::string m_device;
-    int m_width, m_height, m_stride;
+    img_prop_t m_iprop, m_oprop;
 
     int m_fd;
     buf_t *m_bfs;

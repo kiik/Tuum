@@ -11,51 +11,37 @@ namespace tuum { namespace hal {
 
   void Camera::setup() {
     if(openDevice() < 0) {
-      printf(":V4L2Camera::setup: Error - 'openDevice()'!");
+      RTXLOG(":V4L2Camera::setup: Error - 'openDevice()'!", LOG_ERR);
       return;
     }
 
     chkV4L2();
 
     if(initFormat() < 0) {
-      printf(":V4L2Camera::setup: Error - 'initFormat()'!");
+      RTXLOG(":V4L2Camera::setup: Error - 'initFormat()'!", LOG_ERR);
       return;
     }
 
     if(initBuffer() < 0) {
-      printf(":V4L2Camera::setup: Error - 'initBuffer()'!");
+      RTXLOG(":V4L2Camera::setup: Error - 'initBuffer()'!", LOG_ERR);
       return;
     }
 
-    m_stream.init(m_width, m_height, 3);
-
-    /*
-    m_frame.width = m_width;
-    m_frame.height = m_height;
-    m_frame.size = m_width * m_height * 3;
-    m_frame.data = (unsigned char *)malloc(m_frame.size * sizeof(char));
-    m_frame.id = 0;
-    */
+    m_stream.init(m_oprop);
 
     if(startCapture() < 0) {
-      printf(":V4L2Camera::setup: Error - 'startCapture()'!");
+      RTXLOG(":V4L2Camera::setup: Error - 'startCapture()'!", LOG_ERR);
       return;
     }
   }
 
   void Camera::process() {
-    /*
-    captureFrame([=](video_dev* dev, v4l2_buffer* buf) {
-      m_frame.id++;
-      formatFrame((uint8_t*)dev->buff_info[buf->index].start, m_frame.data, m_width, m_height, m_stride);
-    });*/
-
     while(!m_lock.try_lock()) {};
     int res = captureFrame(&m_stream);
     if(res >= 0) {
       m_stream.incSeq();
     } else {
-      printf(":Camera::process: Error - 'captureFrame' code %i\n", res);
+      RTXLOG(tuum::format(":Camera::process: Error - 'captureFrame' code %i\n", res), LOG_ERR);
     }
     m_lock.unlock();
   }
@@ -63,16 +49,6 @@ namespace tuum { namespace hal {
   image_t Camera::getFrame() {
     while(!m_lock.try_lock()) {};
     m_lock.unlock();
-
-    /*
-    Frame out;
-    size_t len = m_stream.getSize();
-    out.data = (uint8_t*)malloc(len);
-
-    uint8_t* dat = (uint8_t*)(m_stream.getFrame()->data);
-    std::copy(dat, dat + len, out.data);
-    */
-
     return m_stream.getFrame();
   }
 

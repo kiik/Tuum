@@ -30,8 +30,8 @@ namespace tuum { namespace hal {
   }
 
   static image_t toRGB(const image_t& in) {
-    image_t out(new img_buf_t(in->width, in->height, in->stride));
-    conv_YCbCr_to_RGB((uint8_t*)in->data, (uint8_t*)out->data, in->width, in->height);
+    image_t out(new img_buf_t(in->frm));
+    conv_YCbCr_to_RGB((uint8_t*)in->data, (uint8_t*)out->data, in->frm.width, in->frm.height);
     return out;
   }
 

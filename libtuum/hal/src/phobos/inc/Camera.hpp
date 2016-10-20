@@ -25,6 +25,7 @@ namespace tuum { namespace hal {
         *dest++ = CLIP(1.164 * (src[0] - 16) - 0.813 * (src[2] - 128) - 0.391 * (src[1] - 128));
         // Blue
         *dest++ = CLIP(1.164 * (src[0] - 16) + 2.018 * (src[1] - 128));
+
         src += 3;
       }
     }
@@ -34,16 +35,11 @@ namespace tuum { namespace hal {
     Frame rgbFrame;
     rgbFrame.data = (unsigned char *) malloc(frame.size * sizeof(char));
 
-    std::copy(frame.data, frame.data + frame.size, rgbFrame.data);
+    std::copy(frame.data, frame.data + frame.getSize(), rgbFrame.data);
 
-    rgbFrame.width = frame.width;
-    rgbFrame.height = frame.height;
-    rgbFrame.size = frame.size;
+    rgbFrame.frm = frame.frm;
 
-    convertYCbCrtoRGB((unsigned char *) frame.data,
-                             rgbFrame.data,
-                             rgbFrame.width,
-                             rgbFrame.height);
+    convertYCbCrtoRGB((unsigned char *)frame.data, rgbFrame.data, rgbFrame.frm.width, rgbFrame.frm.height);
     return rgbFrame;
   }
 
@@ -66,7 +62,6 @@ namespace tuum { namespace hal {
   private:
     Frame m_frame;
     boost::mutex m_lock;
-
   };
 
 }}

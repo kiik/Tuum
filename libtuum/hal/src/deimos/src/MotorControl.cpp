@@ -24,7 +24,7 @@ namespace tuum { namespace hal {
 
     RTX485::Device::init(wHandle);
 
-    std::cout << "[MotorControl::init]Ready." << std::endl;
+    RTXLOG("Ready.");
   }
 
 

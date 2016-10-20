@@ -1,12 +1,9 @@
-/**
- * @file V4L2CameraBase.hpp
- * CameraBase class
- * Class for communication with the robot's cameras, based on the V4L2 API.
- * The video capture example provided with the V4L2 API has been used as a
- * model for the class.
+/** @file V4L2CameraBase.hpp
+ *  @brief V4L2 driver interface in the form of a base 'Camera' class.
  *
- * @authors Ants-Oskar Mäesalu
- * @version 0.1
+ *  @authors Meelik Kiik
+ *  @date 21. October 2016
+ *  @version 0.1
  */
 
 #include <fcntl.h>              // File control operations (open)
@@ -19,14 +16,15 @@
 #include <linux/videodev2.h>    // V4L2 header
 
 #include <iostream> // TODO: Remove
+#include <memory>
 
 #include "V4L2Camera.hpp"       // The class header
 
 
 namespace tuum { namespace hal {
 
-  CameraBase::CameraBase(const std::string &device, const int &width, const int &height):
-    m_device(device), m_width(width), m_height(height),
+  CameraBase::CameraBase(const std::string &device, const size_t& width, const size_t& height):
+    m_device(device), m_iprop({width, height, 0, 0}), m_oprop({0, 0, 0, 0}),
     m_fd(-1)
   {
 
@@ -39,8 +37,10 @@ namespace tuum { namespace hal {
 
   std::string CameraBase::getDevice() const { return m_device; }
 
-  int CameraBase::getWidth() const { return m_width; }
-  int CameraBase::getHeight() const { return m_height; }
+  size_t CameraBase::getWidth() const { return m_iprop.height; }
+  size_t CameraBase::getHeight() const { return m_iprop.width; }
+
+  img_prop_t CameraBase::getFormat() const { return m_iprop; }
 
   void CameraBase::vidioc_enuminput(int fd)
   {
@@ -94,38 +94,36 @@ namespace tuum { namespace hal {
     struct v4l2_format format;
     CLEAR(format);
 
-    // Assign a format suitable for our application to the camera device.
-    // TODO: Check data integrity
-
-    // Type of the data stream - buffer of a video capture stream.
     format.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    // Image width in pixels.
-    format.fmt.pix.width       = m_width;
-    // Image height in pixels.
-    format.fmt.pix.height      = m_height;
+    format.fmt.pix.width       = m_iprop.width;
+    format.fmt.pix.height      = m_iprop.height;
+
     // The pixel format or type of compression, set by the application.
     // YUYV is a packed format with 1/2 horizontal chroma resolution, also known
     // as YUV 4:2:2. In this format each four bytes is two pixels. Each four bytes
     // is two Y's, a Cb and a Cr. Each Y goes to one of the pixels, and the Cb and
     // Cr belong to both pixels.
     format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    // Video images are typically interlaced. Applications can request to capture
-    // or output only the top or bottom field, or both fields interlaced or
-    // sequentially stored in one buffer or alternating in separate buffers.
-    // Drivers return the actual field order selected.
-    // TODO: Deinterlace video to remove motion artifacts from data.
+
     format.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
-    // Try to set the format according to our specifications. On success, 0 is
-    // returned; on error -1 and the errno variable is set appropriately.
     if (xioctl(m_fd, VIDIOC_S_FMT, &format) == -1)
      throw std::runtime_error("VIDIOC_S_FMT");
 
     // VIDIOC_S_FMT may change resolution width and height.
-    m_width = format.fmt.pix.width;
-    m_height = format.fmt.pix.height;
+    m_iprop = {
+      format.fmt.pix.width,
+      format.fmt.pix.height,
+      format.fmt.pix.bytesperline,
+      (format.fmt.pix.bytesperline / format.fmt.pix.width)
+    };
 
-    m_stride = format.fmt.pix.bytesperline;
+    m_oprop = m_iprop;
+    m_oprop.bytesPerPixel = 3;
+    m_oprop.stride = m_oprop.width * m_oprop.bytesPerPixel;
+
+    RTXLOG(tuum::format("i: w=%lu, h=%lu, bpp=%lu, bpl=%lu, sz=%lu", m_iprop.width, m_iprop.height, m_iprop.bytesPerPixel, m_iprop.stride, m_iprop.getSize()), LOG_DEBUG);
+    RTXLOG(tuum::format("o: w=%lu, h=%lu, bpp=%lu, bpl=%lu, sz=%lu", m_oprop.width, m_oprop.height, m_oprop.bytesPerPixel, m_oprop.stride, m_oprop.getSize()), LOG_DEBUG);
 
     return 0;
   }
@@ -180,6 +178,10 @@ namespace tuum { namespace hal {
       if (m_bfs[numberOfBuffers].data == MAP_FAILED)
         throw std::runtime_error("mmap");
     }
+
+
+    RTXLOG(tuum::format("ix=%lu, sz=%lu", buffer.index, buffer.length), LOG_DEBUG);
+    return 0;
   }
 
   int CameraBase::startCapture()
@@ -261,7 +263,11 @@ namespace tuum { namespace hal {
 
       int index = frameRead();
       if (index > 0) {
-        formatFrame((uint8_t*)m_bfs[index].data, (uint8_t*)out->getBack()->data, m_width, m_height, m_stride);
+        uint8_t *src = (uint8_t*)m_bfs[index].data,
+                *dst = (uint8_t*)out->getBack()->data;
+
+        formatFrame(src, dst, m_iprop.width, m_iprop.height, m_iprop.stride);
+
         out->swap();
         return 0;
       }
