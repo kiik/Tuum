@@ -1,6 +1,6 @@
 
-#ifndef TUUM_LPX_H
-#define TUUM_LPX_H
+#ifndef TUUM_LPX_IFORMAT_H
+#define TUUM_LPX_IFORMAT_H
 
 #include <memory>
 
