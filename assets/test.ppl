@@ -9,34 +9,80 @@ REQUIRED_FORMAT:outputFormat(inputFormat)
 CALL:FORMAT_TO_CONSTANT(outputFormat)
 
 INCLUDE(colors.ppl)
+INCLUDE(convolution.ppl)
 
-SOURCE:TestShader
+SOURCE:YUVToRGBShader
 {
   #version 130
   uniform sampler2D texInput;
-  out vec4 texOutput;
+  out vec4 grayScale;
 
   #pragma INSERT(ColorPrimitives)
   #pragma INSERT(outputFormat)
 
-  varying vec2 texcoord;
-
-  void main()
-  {
-    vec2 pos = gl_FragCoord.xy / vec2(outputFormat);
+  void main() {
+    vec2 pos = gl_FragCoord.xy / vec2(outputFormat); // ;
     vec3 yuv = textureLod(texInput, pos, 0.0).rgb, rgb;
 
     YUVToRGB(yuv, rgb);
 
-    texOutput.rgb = rgb;
+    //float g = dot(vec3(0.222, 0.707, 0.071), rgb);
+    grayScale.rgb = rgb;
   }
 }
 
+SOURCE:TestShader
+{
+  #version 130
+  uniform sampler2D grayScale;
+  out vec4 texOutput;
+
+  #pragma INSERT(convolutionSource)
+
+  const mat3 kernelX = mat3(-1.0, 0.0, 1.0,
+                            -2.0, 0.0, 2.0,
+                            -1.0, 0.0, 1.0);
+  const mat3 kernelY = mat3(-1.0, -2.0, -1.0,
+                             0.0,  0.0,  0.0,
+                             1.0,  2.0,  1.0);
+
+  /*
+ const mat3 kernelX = mat3(3.0, 10.0, 3.0,
+                           0.0, 0.0, 0.0,
+                           3.0, -10.0, -3.0);
+ const mat3 kernelY = mat3(3.0, 0.0, -3.0,
+                           10.0,  0.0,  -10.0,
+                           3.0,  0.0,  -3.0);
+*/
+
+  const float normalization = 4.0;
+
+  void main()
+  {
+    mat3 patch = readPatch(grayScale, ivec2(gl_FragCoord.xy), vec4(1.0,1.0,1.0,0.0)/2.0);
+    float gx = convolve(patch, kernelX)/normalization,
+          gy = convolve(patch, kernelY)/normalization;
+    // The gradients are in the range [-1; 1], they need to be transformed to fit in the output range [0; 1] :
+    //vec3 rgb = vec3((gx+1.0)/2.0, (gy+1.0)/2.0, (abs(gx)+abs(gy))/2.0);
+    //float g = 1.0 - sqrt(gx*gx + gy*gy);
+    //if(g < 0.1) g = 0.0;
+    float g = sqrt(gx*gx + gy*gy);
+    texOutput.rgb = vec3(g, g, g);
+  }
+}
+
+FILTER_LAYOUT:YUVToRGBFilter(outputFormat, YUVToRGBShader)
 FILTER_LAYOUT:TestFilter(outputFormat, TestShader)
 
 PIPELINE_MAIN:TestPipeline
 {
   INPUT_PORTS(texInput)
   OUTPUT_PORTS(texOutput)
+
+  FILTER_INSTANCE:YUVToRGBFilter
   FILTER_INSTANCE:TestFilter
+
+  CONNECTION(THIS, texInput, YUVToRGBFilter, texInput)
+  CONNECTION(YUVToRGBFilter, grayScale, TestFilter, grayScale)
+  CONNECTION(TestFilter, texOutput, THIS, texOutput)
 }

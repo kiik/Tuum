@@ -1,0 +1,20 @@
+SOURCE:convolutionSource
+{
+  mat3 readPatch(in sampler2D s, in ivec2 pos, in vec4 projection)
+  {
+    mat3 patch = mat3(0);
+    for(int i=0; i<3; i++)
+      for(int j=0; j<3; j++)
+        patch[i][j] = dot(projection, texelFetch(s, pos+ivec2(j-1, i-1), 0));
+    return patch;
+  }
+
+  float convolve(in mat3 patch, in mat3 coefficients)
+  {
+    float result = 0.0;
+    for(int i=0; i<3; i++)
+      for(int j=0; j<3; j++)
+        result += coefficients[i][j] * patch[i][j];
+    return result;
+  }
+}

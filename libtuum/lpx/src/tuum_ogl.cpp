@@ -24,7 +24,7 @@ using namespace Glip::CorePipeline;
 
 namespace tuum { namespace lpx {
 
-  size_t width = 620, height = 480;
+  size_t width = 640, height = 480;
 
   GLFWwindow* gWindow = nullptr;
   LayoutLoader gLoader;
@@ -147,13 +147,13 @@ namespace tuum { namespace lpx {
   int pipeline_pass(image_t& io) {
     try
     {
-      //glClear(GL_COLOR_BUFFER_BIT);
-      //glLoadIdentity();
+      glClear(GL_COLOR_BUFFER_BIT);
+      glLoadIdentity();
 
       streamTexture->write(io->data, GL_RGB, GL_UNSIGNED_BYTE);
       (*pipe_testPipeline) << (*streamTexture) << Pipeline::Process;
       pipe_testPipeline->out(0).read(io->data);
-      //pipe_hsvToRgb->out(0).bind();
+      //pipe_testPipeline->out(0).bind();
 
       //quad->draw();
       //glfwSwapBuffers(gWindow);
