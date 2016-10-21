@@ -11,10 +11,13 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread.hpp>
 
+#include "cameraConstants.hpp"
+
 #include "tuum_logger.hpp"
 #include "platform.hpp"
 
 #include "tuum_buff.hpp"
+#include "hal.hpp"
 #include "tuum_ogl.hpp"
 
 using namespace Glip;
@@ -24,7 +27,7 @@ using namespace Glip::CorePipeline;
 
 namespace tuum { namespace lpx {
 
-  size_t width = 640, height = 480;
+  size_t width = CAMERA_WIDTH, height = CAMERA_HEIGHT;
 
   GLFWwindow* gWindow = nullptr;
   LayoutLoader gLoader;
@@ -118,6 +121,10 @@ namespace tuum { namespace lpx {
   }
 
   void ogl_setup() {
+    auto iprop = hal::hw.getCamera()->getFormat();
+    width = iprop.width;
+    height = iprop.height;
+
     quad = new GeometryInstance(GeometryPrimitives::StandardQuad(), GL_STATIC_DRAW_ARB);
     streamTexture = new HdlTexture(streamFormat);
 

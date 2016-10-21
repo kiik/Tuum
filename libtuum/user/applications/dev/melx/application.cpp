@@ -21,6 +21,11 @@ namespace usr {
 
   void sys_init() {
     tuum::hal::setup();
+
+    tuum::lpx::init();
+
+    tuum::lpx::setup();
+
     tuum::Visioning::setup();
   }
 
