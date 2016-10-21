@@ -16,18 +16,21 @@
         '<!@(pkg-config --cflags sigc++-2.0)',
       ],
       'include_dirs': [
-	'inc'
+        'inc',
+        '/usr/local/include/glip-lib',
       ],
       'sources': [
         'src/tuum_lpx.cpp',
         'src/lpx_iformat.cpp',
+        'src/tuum_ogl.cpp',
       ],
 
 
       'direct_dependent_settings': {
-        'include_dirs': ['inc'],
+        'include_dirs': [
+          'inc',
+        ],
         'cflags': [
-          '--std=c++11',
           '<!@(pkg-config --cflags gdkmm-3.0)',
           '<!@(pkg-config --cflags gtkmm-3.0)',
           '<!@(pkg-config --cflags sigc++-2.0)',
@@ -40,6 +43,10 @@
           '<!@(pkg-config --libs gdkmm-3.0)',
           '<!@(pkg-config --libs gtkmm-3.0)',
           '<!@(pkg-config --libs sigc++-2.0)',
+          '-lglip',
+          '<!@(pkg-config --libs gl)',
+          '<!@(pkg-config --libs glfw3)',
+          '<!@(pkg-config --libs glew)',
         ],
       },
     },

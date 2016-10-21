@@ -457,7 +457,7 @@ namespace tuum {
 
       unsigned char *pixels = (unsigned char*)frame->data;
       unsigned int channels = 3;
-      unsigned int stride = frame->width * channels;
+      unsigned int stride = frame->frm.bytesPerPixel;
 
       for (std::vector<unsigned int>::const_iterator mode = modeList.begin(); mode != modeList.end(); ++mode) {
 

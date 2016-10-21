@@ -10,6 +10,7 @@
         'libenv',
         'liblpx',
         'libhal',
+        'libsystem',
       ],
 
       'includes': [

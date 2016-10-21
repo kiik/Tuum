@@ -162,6 +162,8 @@ namespace tuum { namespace Visioning {
   void goalDetection();
   void robotDetection();
 
+  int readFrame(image_t&);
+
 }}
 
 #endif // RTX_VISIONING_H

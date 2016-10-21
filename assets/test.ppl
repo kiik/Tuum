@@ -1,0 +1,42 @@
+/** @file test.ppl
+ *
+ *  @author Meelik Kiik
+ *  @date 21. October 2016
+ *  @version 0.1
+ */
+
+REQUIRED_FORMAT:outputFormat(inputFormat)
+CALL:FORMAT_TO_CONSTANT(outputFormat)
+
+INCLUDE(colors.ppl)
+
+SOURCE:TestShader
+{
+  #version 130
+  uniform sampler2D texInput;
+  out vec4 texOutput;
+
+  #pragma INSERT(ColorPrimitives)
+  #pragma INSERT(outputFormat)
+
+  varying vec2 texcoord;
+
+  void main()
+  {
+    vec2 pos = gl_FragCoord.xy / vec2(outputFormat);
+    vec3 yuv = textureLod(texInput, pos, 0.0).rgb, rgb;
+
+    YUVToRGB(yuv, rgb);
+
+    texOutput.rgb = rgb;
+  }
+}
+
+FILTER_LAYOUT:TestFilter(outputFormat, TestShader)
+
+PIPELINE_MAIN:TestPipeline
+{
+  INPUT_PORTS(texInput)
+  OUTPUT_PORTS(texOutput)
+  FILTER_INSTANCE:TestFilter
+}

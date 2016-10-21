@@ -13,11 +13,14 @@
 #include <sstream>
 #include <cmath>
 
+#include "tuum_ogl.hpp"
+
 #include "Perspective.hpp"
 
 #include "tuum_visioning.hpp"
 #include "tuum_localization.hpp"
 #include "mathematicalConstants.hpp"
+
 
 using namespace tuum::hal;
 
@@ -47,6 +50,7 @@ namespace tuum { namespace Visioning {
   bool editingRobots = false; // Unused
 
   void setup() {
+    /*
     Camera *frontCamera = hal::hw.getCamera();
     Camera *backCamera = nullptr; //FIXME
 
@@ -62,13 +66,16 @@ namespace tuum { namespace Visioning {
 
     debugTimer.setPeriod(1000);
     debugTimer.start();
+    */
 
-    printf("\033[1;32m");
-    printf("[Visioning::setup()]Ready.");
-    printf("\033[0m\n");
+    RTXLOG("Ready.");
   }
 
+  image_t B1;
+
+
   void process() {
+    /*
     if (filters.size() == 0) {
       //std::cout << "Process: Filters are empty" << std::endl;
       return;
@@ -100,7 +107,13 @@ namespace tuum { namespace Visioning {
     ballDetection();
     goalDetection();
     robotDetection();
+    */
 
+    lpx::ogl_set_input(hal::hw.getCamera()->getStream());
+  }
+
+  int readFrame(image_t& out) {
+    return lpx::ogl_read_frame(out);
   }
 
   void processCheckerboard() {

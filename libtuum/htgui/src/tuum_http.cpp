@@ -12,7 +12,11 @@
 #include "hal.hpp"
 #include "lpx_iformat.hpp"
 
+#include "tuum_lpx.hpp"
+#include "tuum_visioning.hpp"
+
 #include "tuum_http.hpp"
+
 
 namespace tuum { namespace http {
 
@@ -48,23 +52,9 @@ namespace tuum { namespace http {
     t0 = t1;
   }
 
-
   size_t read_data_stream(size_t lid, image_t& out) {
-    if(!done) {
-      auto camera = hal::hw.getCamera();
-      camStream = camera->getStream();
-      done = true;
-    }
-
-    if(lframe == camStream->getSeq()) return 0;
-
-    auto f = camStream->getFrame();
-
-    stat_begin();
-    out = hal::toRGB(f);
-    stat_end();
-
-    return camStream->getSeq();
+    if(tuum::Visioning::readFrame(out) < 0) return 0;
+    return out->id;
   }
 
   void mjpeg_headers(lws *wsi) {
@@ -82,23 +72,28 @@ namespace tuum { namespace http {
     lws_write(wsi, (unsigned char*)(_head.c_str()), _head.size(), LWS_WRITE_HTTP);
   }
 
+  image_t img;
+
   void mjpeg_stream(lws *wsi) {
-    image_t img;
+    if(!img) {
+      RTXLOG("Initializing stream buffer.", LOG_WARN);
+      Env::spawnBuffer(img);
+    }
 
     size_t fid = read_data_stream(lframe, img);
 
-    if(fid <= 0) return;
+    if(img <= 0) return;
     lframe = fid;
     //fps();
 
-    img = lpx::rgb_to_jpg(img);
+    image_t out_jpg = lpx::rgb_to_jpg(img);
 
     lws_write(wsi, (unsigned char*)mjpeg_boundary, strlen(mjpeg_boundary), LWS_WRITE_HTTP);
 
-    size_t len = img->size;
+    size_t len = out_jpg->size;
 
     mjpeg_frame(wsi, len);
-    lws_write(wsi, (unsigned char*)img->data, len, LWS_WRITE_HTTP);
+    lws_write(wsi, (unsigned char*)out_jpg->data, len, LWS_WRITE_HTTP);
   }
 
 }}

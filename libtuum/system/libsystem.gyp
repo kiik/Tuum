@@ -7,6 +7,7 @@
       'dependencies': [
         'libhal',
         'libenv',
+        'liblpx',
         'libloc',
         'libvision',
         'libgeometry',
