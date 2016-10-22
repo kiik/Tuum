@@ -85,10 +85,10 @@ namespace tuum { namespace lpx {
     glfwSetWindowSizeCallback(gWindow, windowResize);
     glfwMakeContextCurrent(gWindow);
 
-    std::cout << "Vendor name   : " << HandleOpenGL::getVendorName() << std::endl;
-    std::cout << "Renderer name : " << HandleOpenGL::getRendererName() << std::endl;
-    std::cout << "GL version    : " << HandleOpenGL::getVersion() << std::endl;
-    std::cout << "GLSL version  : " << HandleOpenGL::getGLSLVersion() << std::endl;
+    RTXLOG(format("Vendor name   : %s", HandleOpenGL::getVendorName()), LOG_DEBUG);
+    RTXLOG(format("Renderer name : %s", HandleOpenGL::getRendererName()), LOG_DEBUG);
+    RTXLOG(format("GL version    : %s", HandleOpenGL::getVersion()), LOG_DEBUG);
+    RTXLOG(format("GLSL version  : %s", HandleOpenGL::getGLSLVersion()), LOG_DEBUG);
 
     HandleOpenGL::init();
 
