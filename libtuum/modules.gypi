@@ -2,6 +2,7 @@
   'includes': [
     'platform/libenv.gyp',
     'lpx/liblpx.gyp',
+    'tdb/libtdb.gyp',
 
     'loc/libloc.gyp',
     'htgui/libhtgui.gyp',
