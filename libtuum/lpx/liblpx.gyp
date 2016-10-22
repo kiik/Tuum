@@ -7,6 +7,7 @@
       'dependencies': [
         'libenv',
         'libhal',
+        'libtdb',
       ],
 
       'cflags': [
@@ -21,8 +22,13 @@
       ],
       'sources': [
         'src/tuum_lpx.cpp',
-        'src/lpx_iformat.cpp',
         'src/tuum_ogl.cpp',
+
+        'src/lpx_iformat.cpp',
+
+        'src/tuum_file.cpp',
+        'src/tuum_dbfile.cpp',
+        'src/tuum_fs.cpp',
       ],
 
 
@@ -47,6 +53,7 @@
           '<!@(pkg-config --libs gl)',
           '<!@(pkg-config --libs glfw3)',
           '<!@(pkg-config --libs glew)',
+          '<!@(pkg-config --libs sqlite3)',
         ],
       },
     },
