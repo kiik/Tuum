@@ -19,6 +19,11 @@ namespace tuum { namespace db {
 
   }
 
+  query_t::~query_t()
+  {
+
+  }
+
   void query_t::init(value_t tbl)
   {
     m_table = tbl;
@@ -29,16 +34,21 @@ namespace tuum { namespace db {
     return this;
   }
 
-  int query_t::all(result_t& out) {
+  int query_t::exec(rows_t& out) {
     if(run() < 0) return -1;
     out = _d;
     return 0;
   }
 
-  int query_t::first(result_t& out) {
+  int query_t::exec(row_t& out) {
     if(run() < 0) return -1;
-    //out = _d;
-    return -2;
+    if(_d.size() == 0) return 0;
+
+    for(auto col = _d[0].begin(); col != _d[0].end(); col++) {
+      out[col->first] = col->second;
+    }
+
+    return 0;
   }
 
   int query_t::compile() {

@@ -2,6 +2,8 @@
 #ifndef TDB_QUERY_H
 #define TDB_QUERY_H
 
+//#include <boost/variant.hpp>
+
 #include "tdb_types.hpp"
 
 namespace tuum { namespace db {
@@ -10,17 +12,22 @@ namespace tuum { namespace db {
   {
   public:
     typedef std::string sql_t;
-    typedef std::vector<value_map> result_t;
+
+    typedef value_map row_t;
+    typedef std::vector<row_t> rows_t;
+
+    //typedef boost::variant<rows_t, row_t> result_t;
 
     query_t();
     query_t(value_t);
+    ~query_t();
 
     void init(value_t);
 
     query_t* filter(value_map);
 
-    int all(result_t&);
-    int first(result_t&);
+    int exec(rows_t&);
+    int exec(row_t&);
 
     int compile();
     int execute();
@@ -39,7 +46,7 @@ namespace tuum { namespace db {
     value_map m_filters;
 
     sql_t _q = "";
-    result_t _d;
+    rows_t _d;
   };
 
   typedef query_t Query;

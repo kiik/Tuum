@@ -76,14 +76,16 @@ namespace tuum { namespace db {
 
     //add(&file);
 
-    Query::result_t dat;
+    Query::row_t res;
     auto q = file.query()->filter(flt);
 
-    if(q->all(dat) < 0) {
+    if(q->exec(res) < 0) {
       RTXLOG("Query tests failed!", LOG_ERR);
     } else {
-      printf("Result rows: %lu\n", dat.size());
+      printf("Results: %lu\n", res.size());
 
+      /*
+      auto dat = res;
       for(auto row = dat.begin(); row != dat.end(); row++) {
         printf("ROW:\n");
         auto r = *row;
@@ -91,7 +93,13 @@ namespace tuum { namespace db {
           printf("%s => %s\n", col->first.c_str(), col->second.c_str());
         }
         printf("\n");
+      }*/
+
+      auto r = res;
+      for(auto col = r.begin(); col != r.end(); col++) {
+        printf("%s => %s\n", col->first.c_str(), col->second.c_str());
       }
+      printf("\n");
 
       RTXLOG("Query tests passed.");
     }

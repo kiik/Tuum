@@ -54,7 +54,7 @@ namespace tuum { namespace db {
     int rc;
     char* sql = "CREATE TABLE IF NOT EXISTS FILES("  \
           "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," \
-          "PATH           TEXT    NOT NULL," \
+          "PATH           TEXT UNIQUE NOT NULL," \
           "DATA           TEXT    NOT NULL );";
 
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
