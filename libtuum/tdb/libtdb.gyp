@@ -19,6 +19,8 @@
         'src/tuum_orm.cpp',
 
         'src/tdb_query.cpp',
+
+        'src/torm_tests.cpp',
       ],
 
 

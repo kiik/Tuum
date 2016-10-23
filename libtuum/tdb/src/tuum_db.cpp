@@ -6,6 +6,8 @@
 #include "tuum_db.hpp"
 #include "tuum_orm.hpp"
 
+#include "torm_tests.hpp"
+
 using namespace std;
 
 namespace tuum { namespace db {
