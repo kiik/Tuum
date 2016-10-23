@@ -71,15 +71,28 @@ namespace tuum { namespace db {
     tuum::db::FileORM file;
     tuum::db::value_map flt = {{"path", "assets/test2.ppl"}};
 
-    file.m_path.set("assets/test2.ppl");
-    file.m_data.set("HEADER\nBODY\nCONTENTS");
+    file.setPath("assets/test2.ppl");
+    file.setData("HEADER\nBODY\nCONTENTS");
 
     //add(&file);
 
+    Query::result_t dat;
     auto q = file.query()->filter(flt);
-    if(q->all() < 0) {
+
+    if(q->all(dat) < 0) {
       RTXLOG("Query tests failed!", LOG_ERR);
     } else {
+      printf("Result rows: %lu\n", dat.size());
+
+      for(auto row = dat.begin(); row != dat.end(); row++) {
+        printf("ROW:\n");
+        auto r = *row;
+        for(auto col = r.begin(); col != r.end(); col++) {
+          printf("%s => %s\n", col->first.c_str(), col->second.c_str());
+        }
+        printf("\n");
+      }
+
       RTXLOG("Query tests passed.");
     }
 

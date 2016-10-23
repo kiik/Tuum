@@ -28,6 +28,8 @@ namespace tuum {
   {
     RTXLOG("TODO READ", LOG_ERR);
 
+    //db::value_map dat = {{"path" = m_file.path}};
+    //query()->filter(dat)->first();
 
     return -1;
   }

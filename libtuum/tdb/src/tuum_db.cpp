@@ -4,6 +4,7 @@
 
 #include "tuum_logger.hpp"
 #include "tuum_db.hpp"
+#include "tuum_orm.hpp"
 
 using namespace std;
 
@@ -70,7 +71,7 @@ namespace tuum { namespace db {
     init_tables();
     RTXLOG("Database ready.");
 
-    //run_tests();
+    run_orm_tests();
 
     close();
 

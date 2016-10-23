@@ -1,4 +1,5 @@
 
+#include <cstring>
 #include <sqlite3.h>
 
 #include "tuum_db.hpp"
@@ -7,10 +8,20 @@
 
 namespace tuum { namespace db {
 
+  query_t::query_t()
+  {
+
+  }
+
   query_t::query_t(value_t tbl):
     m_table(tbl)
   {
 
+  }
+
+  void query_t::init(value_t tbl)
+  {
+    m_table = tbl;
   }
 
   query_t* query_t::filter(value_map in) {
@@ -18,8 +29,16 @@ namespace tuum { namespace db {
     return this;
   }
 
-  int query_t::all() {
-    return run();
+  int query_t::all(result_t& out) {
+    if(run() < 0) return -1;
+    out = _d;
+    return 0;
+  }
+
+  int query_t::first(result_t& out) {
+    if(run() < 0) return -1;
+    //out = _d;
+    return -2;
   }
 
   int query_t::compile() {
@@ -32,9 +51,8 @@ namespace tuum { namespace db {
     char *zErrMsg = 0;
     int rc;
 
-    const char* data = "Callback function called";
-
-    rc = sqlite3_exec(db, _q.c_str(), callback, (void*)data, &zErrMsg);
+    printf("exec %s\n", _q.c_str());
+    rc = sqlite3_exec(db, _q.c_str(), query_t::query_callback, this, &zErrMsg);
     if(rc != SQLITE_OK) {
       RTXLOG(format("SQL error: %s\n", zErrMsg), LOG_ERR);
       sqlite3_free(zErrMsg);
@@ -47,8 +65,25 @@ namespace tuum { namespace db {
   int query_t::run() {
     if(!isReady()) return -1;
 
+    _d.clear();
+    _q.clear();
+
     if(compile() < 0) return -2;
     if(execute() < 0) return -3;
+
+    return 0;
+  }
+
+  int query_t::hook(int argc, char** argv, char** coln)
+  {
+    value_map row;
+
+    int i;
+    for(i=0; i < argc; i++) {
+      if(argv[i])
+        row[coln[i]] = argv[i];
+    }
+    _d.push_back(row);
 
     return 0;
   }

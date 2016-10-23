@@ -8,16 +8,23 @@
 
 namespace tuum { namespace db {
 
-  typedef std::shared_ptr<query_t> Query;
-
   class Model
   {
   public:
     Model() {};
 
+    void init() {
+      _query.init(__table__());
+    }
+
+    query_t* query() { return &_query; }
+
   public:
     virtual const std::string __table__() const { return ""; };
     virtual value_map __row__() { return value_map(); }
+
+  protected:
+    query_t _query;
   };
 
 
@@ -45,6 +52,8 @@ namespace tuum { namespace db {
       if(!assigned) assigned = true;
     }
 
+    T get() { return value; }
+
     void reset(T v) {
       value = v;
       assigned = false;
@@ -59,14 +68,16 @@ namespace tuum { namespace db {
       m_id("id"),
       m_path("path"), m_data("data")
     {
-
+      Model::init();
     };
 
-    Query query() {
-      return std::make_shared<query_t>(__table__());
-    }
+    std::string getPath() { return m_path.get(); }
+    std::string getData() { return m_data.get(); }
 
-  public:
+    void setPath(std::string v) { m_path.set(v); }
+    void setData(std::string v) { m_data.set(v); }
+
+  protected:
     Column<sql::Integer> m_id;
     Column<sql::Text> m_path;
     Column<sql::Text> m_data;
@@ -90,6 +101,8 @@ namespace tuum { namespace db {
   };
 
   int add();
+
+  int run_orm_tests();
 
 }}
 
