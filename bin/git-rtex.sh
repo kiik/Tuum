@@ -1,1 +1,1 @@
-git subtree push --prefix=libtuum/modules/tuum/rtex rtex master
+git subtree push --prefix=libtuum/ctrlmod/tuum/rtex rtex master
