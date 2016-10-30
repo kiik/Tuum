@@ -257,6 +257,54 @@ ERR:
     return -1;
   }
 
+  //////////////////////////
+  void LSAllyGoalLocate::init() {
+    Motion::stop();
+    ctx.phase = CP_INIT;
+    twitchScanner.init(10, 30);
+  }
+
+  int LSAllyGoalLocate::run() {
+    if(Navigation::getAllyGoal() != nullptr) return 1;
+
+    twitchScanner.run();
+
+    return 0;
+  }
+
+  void LSAllyGoalMove::init() {
+    Motion::stop();
+  }
+
+  int LSAllyGoalMove::run() {
+    Goal* goal = nullptr;
+    goal = Navigation::getAllyGoal();
+
+    if(goal != nullptr) {
+      Vec2i pos = Navigation::calcGoalPos(goal->getTransform()).getPosition();
+
+      Motion::setPositionTarget(pos);
+
+      if(!Motion::isTargetAchieved()) {
+        if(!Motion::isRunning()) Motion::start();
+      } else {
+        goto OK;
+      }
+    } else {
+      Motion::stop();
+    }
+
+    return 0;
+OK:
+    Motion::stop();
+    return 1;
+ERR:
+    Motion::stop();
+    return -1;
+  }
+
+  ////////////////////////
+
 
   // Shoot to opposing goal
   void LSGoalShoot::init() {

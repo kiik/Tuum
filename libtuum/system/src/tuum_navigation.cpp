@@ -92,6 +92,14 @@ namespace tuum { namespace Navigation {
     return t;
   }
 
+  /////////////////////
+  Transform calcGoalPos(Transform* gt) {
+    Vec2f avf = (gt->getPosition() - Localization::getTransform()->getPosition()).getNormalized();
+    Transform t((*gt) - (avf*Motion::VLS_DIST.mn).toInt());
+    return t;
+  }
+  /////////////////////
+
   Vec2i calcGoalShootPos(Transform* t) {
     /*Transform me = Localization::getTransform();
     Vec2i me_p = me.getPosition();
@@ -128,6 +136,13 @@ namespace tuum { namespace Navigation {
 
   Goal* getOpponentGoal() {
     if(gC.getStr("Pattern.OpponentGoal") == "B")
+      return Visioning::blueGoal;
+    else
+      return Visioning::yellowGoal;
+  }
+
+  Goal* getAllyGoal() {
+    if(gC.getStr("Pattern.AllyGoal") == "B")
       return Visioning::blueGoal;
     else
       return Visioning::yellowGoal;

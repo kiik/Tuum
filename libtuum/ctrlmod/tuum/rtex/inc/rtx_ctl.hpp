@@ -139,6 +139,33 @@ namespace tuum { namespace ctl {
       Goal* targetGoal;
   };
 
+  //////////////////////////////////////
+
+  class LSAllyGoalLocate : public Controller {
+    public:
+      LSAllyGoalLocate(Context _ctx) : ctx(_ctx) {}
+
+      void init();
+      int run();
+
+    private:
+      Context ctx;
+      Motion::TwitchScan twitchScanner;
+  };
+
+  class LSAllyGoalMove : public Controller{
+  public:
+    LSAllyGoalMove(Context _ctx) : ctx(_ctx) {}
+
+    void init();
+    int run();
+
+  private:
+    Context ctx;
+  };
+
+  ////////////////////////////////////////////
+
   class LSGoalee : public Controller {
     public:
       LSGoalee(Context _ctx) : ctx(_ctx) {}

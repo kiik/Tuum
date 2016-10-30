@@ -23,11 +23,15 @@ namespace tuum { namespace Navigation {
   int countValidBalls();
 
   Transform calcBallPickupPos(Transform*);
+  Transform calcGoalPos(Transform*);
+  
   Vec2i calcGoalShootPos(Transform*);
 
   Ball* getNearestBall();
 
   Goal* getOpponentGoal();
+
+  Goal* getAllyGoal();
 
   Robot* getAlly();
 
