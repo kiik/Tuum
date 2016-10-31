@@ -9,113 +9,62 @@
 REQUIRED_FORMAT:outputFormat(inputFormat)
 CALL:FORMAT_TO_CONSTANT(outputFormat)
 
+INCLUDE(colors.ppl)
+
 SOURCE:SimplifyShader
 {
   #version 130
   uniform sampler2D texIn;
+  uniform sampler2D dYUV;
+
   out vec4 texOut;
-
-
-  const int cN = 10;
-  const float levels = 10.0;
-
-  /*
-  const int cY[cN] = int[cN](13, 13, 0, 0, 0, 0, 0, 0, 2, 2);
-  const int cU[cN] = int[cN](0, 8, 8, 14, 6, 7, 1, 1, 0, 0);
-  const int cV[cN] = int[cN](0, 9, 9, 15, 6, 6, 0, 0, 0, 0);
-  //                         0%            50%          100%
-
-
-  const vec3 cMap[4] = vec3[4]( vec3(0.0, 0.7, 0.3),
-                                vec3(1.0, 0.5, 0.5),
-                                vec3(0.0, 0.5, 0.5),
-                                vec3(0.0, 0.3, 0.3));
-                                */
-
-  /*
-  const int cY[10] = int[10](19, 19, 0, 8, 8, 8, 0, 0, 4, 4);
-  const int cU[10] = int[10](0, 24, 24, 30, 6, 7, 1, 1, 0, 0);
-  const int cV[10] = int[10](0, 17, 25, 31, 14, 6, 0, 0, 0, 0);
-
-  const vec3 cMap[5] = vec3[5](vec3(0.0, 0.7, 0.3), // blue
-                              vec3(0.0, 0.5, 0.5), // black
-                              vec3(1.0, 0.5, 0.5), // white
-                              vec3(0.49, 0.33, 0.35), // green
-                              vec3(0.0, 0.3, 0.3)); // red
-  */
-  // Encoded colors:
-  const int cY[32] = int[32](0, 0, 0, 0, 0, 0, 0, 0, 65535, 65535, 65535, 65535, 65535, 65535, 65535, 0, 0, 0, 0, 0, 4294901760, 4294901760, 4294901760, 4294901760, 4294901760, 4294901760, 4294901760, 0, 0, 0, 0, 0);
-  const int cU[32] = int[32](983055, 983055, 983055, 983055, 0, 0, 15728880, 15728880, 15728880, 15728880, 15728880, 15728880, 15728880, 0, 0, 0, 251662080, 251662080, 251662080, 251662080, 251662080, 251662080, 251662080, 0, 0, 0, 4026593280, 4026593280, 4026593280, 4026593280, 4026593280, 4026593280);
-  const int cV[32] = int[32](286331153, 286331153, 286331153, 286331153, 0, 0, 572662306, 572662306, 572662306, 572662306, 572662306, 572662306, 572662306, 0, 0, 0, 1145324612, 1145324612, 1145324612, 1145324612, 1145324612, 1145324612, 1145324612, 0, 0, 0, 2290649224, 2290649224, 2290649224, 2290649224, 2290649224, 2290649224);
-
-  const vec3 cMap[32] = vec3[32]( vec3(0.375, 0.0, 0.0), // 0
-   vec3(0.375, 0.0, 0.31746031746031744), // 1
-   vec3(0.375, 0.0, 0.6349206349206349), // 2
-   vec3(0.375, 0.0, 0.9523809523809523), // 3
-   vec3(0.375, 0.31746031746031744, 0.0), // 4
-   vec3(0.375, 0.31746031746031744, 0.31746031746031744), // 5
-   vec3(0.375, 0.31746031746031744, 0.6349206349206349), // 6
-   vec3(0.375, 0.31746031746031744, 0.9523809523809523), // 7
-   vec3(0.375, 0.6349206349206349, 0.0), // 8
-   vec3(0.375, 0.6349206349206349, 0.31746031746031744), // 9
-   vec3(0.375, 0.6349206349206349, 0.6349206349206349), // 10
-   vec3(0.375, 0.6349206349206349, 0.9523809523809523), // 11
-   vec3(0.375, 0.9523809523809523, 0.0), // 12
-   vec3(0.375, 0.9523809523809523, 0.31746031746031744), // 13
-   vec3(0.375, 0.9523809523809523, 0.6349206349206349), // 14
-   vec3(0.375, 0.9523809523809523, 0.9523809523809523), // 15
-   vec3(0.75, 0.0, 0.0), // 16
-   vec3(0.75, 0.0, 0.31746031746031744), // 17
-   vec3(0.75, 0.0, 0.6349206349206349), // 18
-   vec3(0.75, 0.0, 0.9523809523809523), // 19
-   vec3(0.75, 0.31746031746031744, 0.0), // 20
-   vec3(0.75, 0.31746031746031744, 0.31746031746031744), // 21
-   vec3(0.75, 0.31746031746031744, 0.6349206349206349), // 22
-   vec3(0.75, 0.31746031746031744, 0.9523809523809523), // 23
-   vec3(0.75, 0.6349206349206349, 0.0), // 24
-   vec3(0.75, 0.6349206349206349, 0.31746031746031744), // 25
-   vec3(0.75, 0.6349206349206349, 0.6349206349206349), // 26
-   vec3(0.75, 0.6349206349206349, 0.9523809523809523), // 27
-   vec3(0.75, 0.9523809523809523, 0.0), // 28
-   vec3(0.75, 0.9523809523809523, 0.31746031746031744), // 29
-   vec3(0.75, 0.9523809523809523, 0.6349206349206349), // 30
-   vec3(0.75, 0.9523809523809523, 0.9523809523809523)); // 31
-
 
   void main()
   {
     vec3 rgb = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
 
-    ivec3 px = ivec3(rgb.r * 15, rgb.gb * 31);
+    int y = int(rgb.r * 15);
+    int v = int(rgb.g * 31) * 32 + int(rgb.b * 31);
 
-    int v = (cY[px.r] & cU[px.g] & cV[px.b]); // 0b0001000
+    vec3 srgb = texelFetch(dYUV, ivec2(v, y), 0).rgb;
 
-    int ix = 0;
-    if(v > 0) {
-      while((v & 1) == 0) {
-        v = v >> 1;
-        ix++;
-      }
-      texOut.rgb = cMap[ix % 32];
-    } else {
-      texOut.rgb = vec3(0.0, 0.0, 0.0);
-    }
+    texOut.rgb = srgb;
+  }
 
 
-    //texOut.rgb = vec3(px);
+}
+
+SOURCE:YUV2RGBShader
+{
+  #version 130
+  uniform sampler2D texIn;
+  out vec4 texOut;
+
+  #pragma INSERT(ColorPrimitives)
+
+  void main()
+  {
+    vec3 yuv = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb, rgb;
+    YUVToRGB(yuv, rgb);
+    texOut.rgb = rgb;
   }
 
 }
 
 FILTER_LAYOUT:SimplifyFilter(outputFormat, SimplifyShader)
+FILTER_LAYOUT:YUV2RGBFilter(outputFormat, YUV2RGBShader)
 
 PIPELINE_MAIN:SimplifyPipe
 {
-  INPUT_PORTS(texIn)
+  INPUT_PORTS(texIn, dYUV)
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:SimplifyFilter
+  FILTER_INSTANCE:YUV2RGBFilter
 
   CONNECTION(THIS, texIn, SimplifyFilter, texIn)
-  CONNECTION(SimplifyFilter, texOut, THIS, texOut)
+  CONNECTION(THIS, dYUV, SimplifyFilter, dYUV)
+
+  CONNECTION(SimplifyFilter, texOut, YUV2RGBFilter, texIn)
+  CONNECTION(YUV2RGBFilter, texOut, THIS, texOut)
 }
