@@ -16,25 +16,41 @@
 #include "Goal.hpp"
 #include "Robot.hpp"
 
-namespace tuum { namespace Navigation {
+namespace tuum {
 
-  void preProcess();
+  class Visioning;
 
-  int countValidBalls();
+  class Navigation
+  {
+  public:
+    Navigation(Visioning*);
 
-  Transform calcBallPickupPos(Transform*);
-  Transform calcGoalPos(Transform*);
-  
-  Vec2i calcGoalShootPos(Transform*);
+    void init();
+    void run();
 
-  Ball* getNearestBall();
+    void updateEntities();
 
-  Goal* getOpponentGoal();
+    int countValidBalls();
 
-  Goal* getAllyGoal();
+    Transform calcBallPickupPos(Transform*);
+    Vec2i calcGoalShootPos(Transform*);
 
-  Robot* getAlly();
+    Ball* getNearestBall();
 
-}}
+    Goal* getOpponentGoal();
+
+    Robot* getAlly();
+
+    static void setup(Visioning*);
+    static void preProcess();
+    static void process();
+
+  private:
+    Visioning* mVision;
+  };
+
+  extern Navigation* gNavigation;
+
+}
 
 #endif // RTX_NAVIGATION_H

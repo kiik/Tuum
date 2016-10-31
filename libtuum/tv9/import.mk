@@ -1,5 +1,0 @@
-TV9_MODULE_PATH ?= $(PROJECT_ROOT)/tv9
-include $(call rwildcard,$(TV9_MODULE_PATH)/,include.mk)
-
-TV9_LIB_DIR = $(BUILD_PATH_BASE)/tv9/$(BUILD_TARGET_PLATFORM)
-TV9_LIB_DEP = $(TV9_LIB_DIR)/libtv9.a

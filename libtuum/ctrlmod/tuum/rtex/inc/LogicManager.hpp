@@ -22,7 +22,6 @@ namespace tuum {
     static STM* loadKickoffPasser();
 
     static STM* loadOffensivePlay();
-    static STM* loadDefensivePlay();
   };
 
 }

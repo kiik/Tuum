@@ -9,10 +9,9 @@
 #ifndef RTX_VISION_FEATURE_H
 #define RTX_VISION_FEATURE_H
 
-#include "Point2D.hpp"
-
 #include <utility>
 
+#include "Point2D.hpp"
 
 namespace tuum {
 
@@ -21,7 +20,7 @@ namespace tuum {
     LINE,
     CORNER
   };
-  
+
   class Feature {
 
     public:

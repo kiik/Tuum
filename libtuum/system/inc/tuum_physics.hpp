@@ -1,23 +1,26 @@
-/**
- *  @file tuum_physics.hpp
+/** @file tuum_physics.hpp
  *  Physics system interface
  *
- *  @authors Ants-Oskar Mäesalu
+ *  @authors Ants-Oskar Mäesalu, Meelik Kiik
  *  @version 0.1
- *  @date 3 December 2015
+ *  @date 3. December 2015
 */
 
-#ifndef RTX_SYSTEM_PHYSICS_H
-#define RTX_SYSTEM_PHYSICS_H
+#ifndef TUUM_SYS_PHYSICS_H
+#define TUUM_SYS_PHYSICS_H
 
+#include "tuum_entities.hpp"
 #include "tuum_visioning.hpp"
-#include "Vision.hpp"
 
+namespace tuum {
 
-namespace tuum { namespace Physics {
+  class Physics
+  {
 
-  Entity* rayCast(const double&, const double& = 0);
+    static Entity* rayCast(Visioning::Context, const double&, const double& = 0);
 
-}}
+  };
 
-#endif // RTX_SYSTEM_PHYSICS_H
+}
+
+#endif

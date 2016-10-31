@@ -10,10 +10,9 @@
 #ifndef RTX_VISION_PERSPECTIVE_H
 #define RTX_VISION_PERSPECTIVE_H
 
-#include "Point2D.hpp"
-
 #include <vector>
 
+#include "Point2D.hpp"
 
 namespace tuum { namespace Vision { namespace Perspective {
 

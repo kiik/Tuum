@@ -10,11 +10,10 @@
 #ifndef RTX_VISION_BLOB_H
 #define RTX_VISION_BLOB_H
 
-#include "Point2D.hpp"
-#include "Color.hpp"
-
 #include <vector>
 
+#include "Point2D.hpp"
+#include "Color.hpp"
 
 namespace tuum {
 

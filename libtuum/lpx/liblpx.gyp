@@ -25,16 +25,13 @@
         'src/tuum_ogl.cpp',
 
         'src/lpx_iformat.cpp',
-
-        'src/tuum_file.cpp',
-        'src/tuum_dbfile.cpp',
-        'src/tuum_fs.cpp',
       ],
 
 
       'direct_dependent_settings': {
         'include_dirs': [
           'inc',
+          '/usr/local/include/glip-lib',
         ],
         'cflags': [
           '<!@(pkg-config --cflags gdkmm-3.0)',

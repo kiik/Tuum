@@ -5,6 +5,24 @@
 #include "tuum_buff.hpp"
 #include "tuum_streams.hpp"
 
+namespace Glip {
+  namespace Modules {
+    class LayoutLoader;
+  }
+
+  namespace CorePipeline {
+    class Pipeline;
+  }
+
+  namespace CoreGL {
+    class HdlTexture;
+    class HdlTextureFormat;
+  }
+}
+
+using namespace Glip::Modules;
+using namespace Glip::CorePipeline;
+
 namespace tuum { namespace lpx {
 
   int ogl_init();
@@ -18,6 +36,8 @@ namespace tuum { namespace lpx {
   int ogl_read_frame(image_t&);
 
   int pipeline_pass(image_t&);
+
+  LayoutLoader* ogl_get_loader();
 
 }}
 

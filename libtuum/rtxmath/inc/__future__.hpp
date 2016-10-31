@@ -30,6 +30,7 @@ namespace tuum {
 
 };
 
+/*
 namespace vis {
 
   class Feature {
@@ -42,5 +43,6 @@ namespace vis {
   };
 
 };
+*/
 
 #endif // RTX_FUTURE_H

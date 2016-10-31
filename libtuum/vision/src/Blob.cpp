@@ -7,17 +7,16 @@
  *  @date 4 December 2015
  */
 
-#include "cameraConstants.hpp"
-#include "entityConstants.hpp"
-
-#include "Blob.hpp"
-#include "Perspective.hpp"
-
 #include <algorithm>
 #include <iostream> // TODO: Remove
 #include <utility>
 #include <cmath>
 
+#include "cameraConstants.hpp"
+#include "entityConstants.hpp"
+
+#include "Blob.hpp"
+#include "Perspective.hpp"
 
 namespace tuum {
 

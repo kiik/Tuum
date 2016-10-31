@@ -14,19 +14,18 @@ namespace tuum { namespace lpx {
 
   void init() {
     ogl_init();
-
-    auto gtkApp = Gtk::Application::create();
     db::init();
 
-    run_file_tests();
+    auto gtkApp = Gtk::Application::create();
+    //run_file_tests();
   }
 
   void setup() {
-    ogl_setup();
+
   }
 
   void process() {
-    ogl_process();
+
   }
 
 }}

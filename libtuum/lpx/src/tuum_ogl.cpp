@@ -5,8 +5,9 @@
 #include <GL/glut.h>
 
 #include "GLFW/glfw3.h"
-#include "GLIPLib.hpp"
 #include "Modules/FFT.hpp"
+
+#include "tuum_ogl_core.hpp"
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread.hpp>
@@ -42,7 +43,7 @@ namespace tuum { namespace lpx {
   image_t processedFrame;
   boost::mutex outputFrameLock;
 
-  Pipeline* pipe_testPipeline;
+  Pipeline* pipe_testPipeline, *pipe_pixelFeatures;
 
   size_t t0 = 0, dt = 0, printT = 0;
 
@@ -116,6 +117,10 @@ namespace tuum { namespace lpx {
     }
   }
 
+  LayoutLoader* ogl_get_loader() {
+    return &gLoader;
+  }
+
   void ogl_set_input(ImageStream* in) {
     inputStream = in;
   }
@@ -130,12 +135,14 @@ namespace tuum { namespace lpx {
 
     gLoader.addRequiredElement("inputFormat", streamFormat);
     pipe_testPipeline = gLoader.getPipeline("./assets/test.ppl", "TestPipeline");
+    pipe_pixelFeatures   = gLoader.getPipeline("./assets/pixfeat.ppl", "PixFeatPipe");
 
     Env::spawnBuffer(processedFrame);
 
+    /*
     if(oglThr == nullptr) {
       oglThr = new boost::thread(&pipe_proc);
-    }
+    }*/
 
   }
 
@@ -159,8 +166,10 @@ namespace tuum { namespace lpx {
 
       streamTexture->write(io->data, GL_RGB, GL_UNSIGNED_BYTE);
       (*pipe_testPipeline) << (*streamTexture) << Pipeline::Process;
-      pipe_testPipeline->out(0).read(io->data);
-      //pipe_testPipeline->out(0).bind();
+      //<< pipe_testPipeline->out(0)
+      (*pipe_pixelFeatures) << pipe_testPipeline->out(0) << pipe_testPipeline->out(1) << Pipeline::Process;
+
+      pipe_pixelFeatures->out(0).read(io->data);
 
       //quad->draw();
       //glfwSwapBuffers(gWindow);

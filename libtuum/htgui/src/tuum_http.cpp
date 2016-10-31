@@ -53,7 +53,9 @@ namespace tuum { namespace http {
   }
 
   size_t read_data_stream(size_t lid, image_t& out) {
-    if(tuum::Visioning::readFrame(out) < 0) return 0;
+    tuum::Visioning* vis = tuum::gVision;
+    if(vis == nullptr) return 0;
+    if(vis->readFrame(out) < 0) return 0;
     return out->id;
   }
 

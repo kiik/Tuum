@@ -13,12 +13,12 @@
 #include <vector>
 
 
-namespace tuum { namespace Physics {
+namespace tuum {
 
   // Returns a pointer to the closest entity that is in the way of the ray. If
   // there seems to be no entity in the way of the ray, a null pointer is
   // returned.
-  Entity* rayCast(const double &angle, const double &width) { // TODO: Refactor
+  Entity* Physics::rayCast(Visioning::Context ctx, const double &angle, const double &width) { // TODO: Refactor
 
     // Initialise the result to nothing being in the way of the ray
     Entity *closestEntity = nullptr;
@@ -37,31 +37,33 @@ namespace tuum { namespace Physics {
     double radiusVectorY = perpendicularSlope * radiusVectorX;
 
     // Initialise a list of entities to check
-    std::vector<Entity*> entities;
+    //std::vector<Entity*> entities;
 
     // Add balls to the entities list
-    Visioning::BallSet balls = *(Visioning::ballDetect.getEntities());
-    entities.insert(entities.end(), balls.begin(), balls.end());
+    //Visioning::BallSet balls = *(Visioning::ballDetect.getEntities());
+    //entities.insert(entities.end(), balls.begin(), balls.end());
 
     // Add goals to the entities list if they exist
-    if (Visioning::yellowGoal != nullptr)
+    /*if (Visioning::yellowGoal != nullptr)
       entities.push_back(Visioning::yellowGoal);
     if (Visioning::blueGoal != nullptr)
       entities.push_back(Visioning::blueGoal);
+      */
 
     // Add robots to the entities list
-    Visioning::RobotSet robots = *(Visioning::robotDetect.getEntities());
-    entities.insert(entities.end(), robots.begin(), robots.end());
+    //Visioning::RobotSet robots = *(Visioning::robotDetect.getEntities());
+    //entities.insert(entities.end(), robots.begin(), robots.end());
 
     // DEBUG:
-    std::cout << "Ray: " << std::endl;
-    std::cout << "(" << radius << ", " << angle << "), (" << slope << ", " << perpendicularSlope << "), (" << radiusVectorX << ", " << radiusVectorY << ")" << std::endl;
-    std::cout << std::endl;
+    //std::cout << "Ray: " << std::endl;
+    //std::cout << "(" << radius << ", " << angle << "), (" << slope << ", " << perpendicularSlope << "), (" << radiusVectorX << ", " << radiusVectorY << ")" << std::endl;
+    //std::cout << std::endl;
 
     // Check for entity blobs overlapping the ray area
+    /*
     for (std::vector<Entity*>::iterator entity = entities.begin(); entity != entities.end(); ++entity) {
 
-      /*// DEBUG:
+      // DEBUG:
       if (*entity == nullptr)
         std::cout << "Entity is null" << std::endl;
       else
@@ -71,7 +73,7 @@ namespace tuum { namespace Physics {
       if ((*entity)->getBlob() == nullptr)
         std::cout << "Entity blob is null" << std::endl;
       else
-        std::cout << "Entity blob is not null" << std::endl;*/
+        std::cout << "Entity blob is not null" << std::endl;
 
       // DEBUG:
       std::cout << "Entity: " << std::endl;
@@ -191,9 +193,8 @@ namespace tuum { namespace Physics {
     // Check for field lines in the way of the ray. What to do with the result
     // value in this case?
     // TODO
-
-    return closestEntity;
-
+    */
+    return nullptr;
   }
 
-}}
+}

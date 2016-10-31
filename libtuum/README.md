@@ -1,55 +1,53 @@
-# Tuum Tracdrone
+# libtuum
 
 ## Dependencies
 
-sudo apt-get install libgtkmm-3.0-dev
-
-sudo apt-get install qt5-default qttools5-dev-tools qtdeclarative5-dev
-
-sudo apt-get install libglew1.5 libglew-dev freeglut3 freeglut3-dev libglm-dev
-
-sudo apt-get install assimp-utils libassimp-dev
-
-sudo apt-get install libwebsockets7 libwebsockets-dev
-
-sudo apt-get install libboost-all-dev
-
 Consolidated dependency install:
+
 sudo bin/install-dependencies.sh
 
+Dependencies which might need to be compiled manually are specified in the script as well.
+
+# libtuum architecture
 
 ## Directory guide
 
-#### Low level modules
+- 'lib' : Miscellaneous libraries
+
 - 'hal' : The hardware abstraction layer - contains interfaces for camera, motor drivers, RF communication etc.
-- 'loc' : Localization functionality module.
-- 'vision' : Low level image processing module.
+- 'ctrlmod' : Contains libraries for expressing logic which also link together the whole program.
 
-#### Core function modules
-- 'entities' : Contains definitions of objects that exist in the world.
-- 'geometry' : Geometrical structures module.
-- 'rtxmath' : Basic mathematical constructs module.
+- 'rtxmath' : Generic mathemathical functionality.
+- 'geometry' : Generic geometry datastructure functionality.
+- 'entities' : Generic entity definitions.
 
-#### High-level logic modules
-- 'system' : Contains system modules which continuously process information and control the platform hardware.
-- 'user' : Contains application modules with different robot logic implementations
+- 'user' : Application modules for controlling which subsystems are run. Mainly used for development purposes.
+- 'system' : Contains classes for spawning a running robot instance with motion, localization and visioning processes.
 
+- 'lpx' : External library interface proxy module. ( OpenGL, Gtk, GLIP-Lib, etc. )
+- 'env' : General environment related functions module. ( time, logging, fs, dynamic resources handling, etc. )
+- 'tdb' : Local Sqlite database interface.
 
-#### Misc
-- 'build/target' : Compiled libraries output
--  'modules' : Contained directories define linking of modules within the build system.
--  'main' : Compilation execution directory.
+- 'loc' : Localization functionality module
+- 'vision' : Vision functionality module
 
+- 'htgui' : Web interface module.
+- 'qtgui' : Qt5 interface module. ( Currently deprecated. )
+
+- 'tv9' : Google V9 engine bindings ( Work in progress. )
 
 ## Build system guide
 
--  'tlm.mk' : Makefile for top level modules
-  - 'top-level-module.mk' : Makefile for building modules
-    - 'platform-id.mk' : Defines all available platforms
-    - 'checks.mk' : Pre-build checks
-    - 'module.mk' : Defines current module targets
-    - 'macros.mk' : Recursive search, assertion, modular macro definitions
-      - 'os.mk' : Define MAKE_OS for current operating system
-      - 'verbose.mk' : "-v" parameter verbosity control
-    - 'gcc-tools.mk'
-      - 'common-tools.mk'
+The 'gyp' tool can be used for generating the compilation environment.
+All of the modules' build settings are specified in their .gyp files.
+
+# Authors
+
+## Original Author
+ * Meelik Kiik (kiik.meelik@gmail.com)
+
+## Co-Author
+ * Ants-Oskar Mäesalu (aomaesalu@gmail.com)
+
+## Contributors
+ * Todo

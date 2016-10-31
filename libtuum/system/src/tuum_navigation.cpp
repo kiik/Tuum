@@ -10,22 +10,37 @@
 #include "syscore/MotionData.hpp"
 
 #include "tuum_platform.hpp"
-#include "tuum_navigation.hpp"
+
 #include "tuum_visioning.hpp"
 #include "tuum_localization.hpp"
 #include "tuum_motion.hpp"
 
+#include "tuum_navigation.hpp"
+
 // TODO: Obstacle avoidance
 // TODO: Pathfinding
 // TODO: No out of bounds transform target
-namespace tuum { namespace Navigation {
+namespace tuum {
 
-  void preProcess() {
+  Navigation::Navigation(Visioning* vision):
+    mVision(vision)
+  {
 
-    // Validate balls
+  }
+
+  void Navigation::init() {
+
+  }
+
+  void Navigation::run() {
+
+  }
+
+  void Navigation::updateEntities() {
+    /*
     Visioning::BallSet balls = *(Visioning::ballDetect.getEntities());
     Vision::LineSet lines = Vision::getLines();
-    for (Visioning::BallSet::iterator ball = balls.begin(); ball != balls.end(); ++ball) {
+    for(Visioning::BallSet::iterator ball = balls.begin(); ball != balls.end(); ++ball) {
 
       // Check whether the current ball is in a goal
 
@@ -74,33 +89,27 @@ namespace tuum { namespace Navigation {
       }
 
     }
-
+    */
   }
 
-  int countValidBalls() {
+  int Navigation::countValidBalls() {
+    /*
     int i = 0;
     for(auto& b : *Visioning::ballDetect.getEntities()) {
       if(b->isValid()) i++;
     }
-    return i;
+    */
+    return 0;
   }
 
   //TODO: position to relative position
-  Transform calcBallPickupPos(Transform* bt) {
+  Transform Navigation::calcBallPickupPos(Transform* bt) {
     Vec2f avf = (bt->getPosition() - Localization::getTransform()->getPosition()).getNormalized();
     Transform t((*bt) - (avf*Motion::VLS_DIST.mn).toInt());
     return t;
   }
 
-  /////////////////////
-  Transform calcGoalPos(Transform* gt) {
-    Vec2f avf = (gt->getPosition() - Localization::getTransform()->getPosition()).getNormalized();
-    Transform t((*gt) - (avf*Motion::VLS_DIST.mn).toInt());
-    return t;
-  }
-  /////////////////////
-
-  Vec2i calcGoalShootPos(Transform* t) {
+  Vec2i Navigation::calcGoalShootPos(Transform* t) {
     /*Transform me = Localization::getTransform();
     Vec2i me_p = me.getPosition();
     Vec2i g_p = t->getPosition();
@@ -116,13 +125,16 @@ namespace tuum { namespace Navigation {
     return target;*/
   }
 
-  Ball* getNearestBall() {
-    Ball* ball = nullptr;
-    Transform* t = Localization::getTransform();
+  Ball* Navigation::getNearestBall() {
+    BallDetect* balls = mVision->get<BallDetect>();
+    if(balls == nullptr) return nullptr;
 
+    Ball* ball = nullptr;
+
+    Transform* t = Localization::getTransform();
     double d = 1000000.0, _d;
 
-    for(auto b : *Visioning::ballDetect.getEntities()) {
+    for(auto b : *balls->getEntities()) {
       if(!b->isValid()) continue;
       _d = t->distanceTo(b->getTransform()->getPosition());
 
@@ -134,25 +146,44 @@ namespace tuum { namespace Navigation {
     return ball;
   }
 
-  Goal* getOpponentGoal() {
+  Goal* Navigation::getOpponentGoal() {
+    /*
     if(gC.getStr("Pattern.OpponentGoal") == "B")
       return Visioning::blueGoal;
     else
       return Visioning::yellowGoal;
+    */
+
+    return nullptr;
   }
 
-  Goal* getAllyGoal() {
-    if(gC.getStr("Pattern.AllyGoal") == "B")
-      return Visioning::blueGoal;
-    else
-      return Visioning::yellowGoal;
-  }
+  Robot* Navigation::getAlly() {
+    RobotDetect* robots = mVision->get<RobotDetect>();
+    if(robots == nullptr) return nullptr;
 
-  Robot* getAlly() {
-    for(auto& r : *Visioning::robotDetect.getEntities())
+    for(auto& r : *robots->getEntities())
       if(r->isAlly()) return r;
 
     return nullptr;
   }
 
-}}
+  void Navigation::setup(Visioning* vision) {
+    if(gNavigation == nullptr) return;
+
+    gNavigation = new Navigation(vision);
+    gNavigation->init();
+  }
+
+  void Navigation::preProcess() {
+    if(gNavigation == nullptr) return;
+    gNavigation->updateEntities();
+  }
+
+  void Navigation::process() {
+    if(gNavigation == nullptr) return;
+    gNavigation->run();
+  }
+
+  Navigation* gNavigation = nullptr;
+
+}

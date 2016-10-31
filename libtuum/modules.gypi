@@ -1,6 +1,6 @@
 {
   'includes': [
-    'platform/libenv.gyp',
+    'env/libenv.gyp',
     'lpx/liblpx.gyp',
     'tdb/libtdb.gyp',
 

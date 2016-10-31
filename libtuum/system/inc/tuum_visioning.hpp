@@ -1,169 +1,101 @@
 /** @file tuum_visioning.hpp
  *  Visioning interface declaration.
  *
- *  @authors Ants-Oskar Mäesalu
- *  @authors Meelik Kiik
- *  @version 0.1
- *  @date 4 December 2015
+ *  @authors Ants-Oskar Mäesalu, Meelik Kiik
+ *  @version 0.2
+ *  @date 4. December 2015
  */
 
-#ifndef RTX_VISIONING_H
-#define RTX_VISIONING_H
+#ifndef TUUM_VISIONING_H
+#define TUUM_VISIONING_H
 
 #include <vector>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/coroutine2/coroutine.hpp>
-
-#include "rtxmath.hpp"
 
 #include "hal.hpp"
-#include "rtxent.hpp"
-#include "rtxvision.h"
+
+#include "rtxmath.hpp"
+#include "Feature.hpp"
+#include "strms/ImageStream.hpp"
+
+#include "tuum_buff.hpp"
+#include "tuum_ppl.hpp"
+
+#include "tuum_entities.hpp"
+#include "tuum_detect.hpp"
 
 using namespace boost;
-using namespace vis;
+using namespace tuum::vision;
 
-namespace tuum { namespace Visioning {
+namespace tuum {
 
   //TODO: replace this function's usage with an analoguous Entity method
-  double stateProbability(Transform* t1, Transform* t2);
+  static double stateProbability(Transform* t1, Transform* t2) {
+    const double A = 125.0;
+    double px = A*gauss_prob2(t1->getX(), 120, t2->getX());
+    double py = A*gauss_prob2(t1->getY(), 120, t2->getY());
+    return 2*px*py / (px+py);
+  }
 
   typedef std::vector<Feature*> FeatureSet;
   typedef std::vector<Ball*> BallSet;
   typedef std::vector<Robot*> RobotSet;
 
-  // Entity Detection State
-  template<class T>
-  struct EDS {
-    int mn_h = -5; // Entity removal health condition
-    int lo_h = 2;  // Entity detection health condition
-    int med_h = 5;
+  typedef EDS<Ball>  BallDetect;
+  typedef EDS<Goal>  GoalDetect;
+  typedef EDS<Robot> RobotDetect;
 
-    std::vector<T*> objs;
-    std::vector<T*> tmp_objs;
-    mutex mLock;
+  const uint8_t TUUM_CAM_N = 1;
 
-    std::vector<T*>* getEntities() {
-      mutex::scoped_lock scoped_lock(mLock);
-      return &objs;
+  class Visioning;
+
+  extern Visioning* gVision;
+
+  class Visioning
+  {
+  public:
+    struct Context {
+      BallDetect  ballDetect;
+      GoalDetect  goalDetect;
+      //TODO: feature detect
+    };
+
+    Visioning();
+
+    void init();
+    void run();
+
+    bool pplIsReady();
+
+    int nextFrame();
+    int readFrame(image_t&);
+
+    int doFramePass();
+
+    static void setup();
+    static void process();
+
+    template<typename T>
+    T* get() {
+      return nullptr;
     }
 
-    std::vector<T*>* getTmpEntities() {
-      mutex::scoped_lock scoped_lock(mLock);
-      return &tmp_objs;
-    }
+  protected:
+    ImageStream* m_inpStreams[TUUM_CAM_N];
+    TxFormat* m_format[TUUM_CAM_N];
 
-    typename boost::coroutines2::asymmetric_coroutine<T*>::pull_type getAllEntities() {
-      EDS* that = this;
+    size_t m_cam_N, m_lid;
+    image_t m_iFrame, m_oFrame;
+    mutex m_iFrameLock, m_oFrameLock;
+    Texture* m_tex;
 
-      typename boost::coroutines2::asymmetric_coroutine<T*>::pull_type routine(
-        [that](typename boost::coroutines2::asymmetric_coroutine<T*>::push_type& sink){
-          for(auto& o : that->objs) sink(o);
-          for(auto& o : that->tmp_objs) sink(o);
-      });
+    Context m_ctx;
 
-      return routine;
-    }
-
-    void processProbableEntity(T* obj) {
-      // Calculate entity similarity probabilities
-      T* probable_entity = nullptr;
-      double p = 0.0, _p;
-
-      // Calculate balls similarity probabilities
-      for(auto& o : this->getAllEntities()) {
-        // TODO: entity object should implement this probability method
-        _p = stateProbability(o->getTransform(), obj->getTransform());
-
-        if(_p > p) {
-          p = _p;
-          probable_entity = o;
-        }
-      }
-
-      // Create or update balls
-      if (p < 0.01) {
-        if (probable_entity != nullptr) {
-          //std::cout << probable_entity->toString() << std::endl;
-          //std::cout << "Create new entity, ^p=" << p << std::endl;
-        }
-        tmp_objs.push_back(new T(*obj));
-      } else if (probable_entity != nullptr) {
-        probable_entity->update(*obj->getTransform());
-        probable_entity->update(*obj->getBlob());
-      }
-    }
-
-    int size() { return objs.size(); }
-    int probableSize() { return tmp_objs.size(); }
-
-    void update() {
-      {
-        for(auto& b : objs) {
-          b->update();
-        }
-
-        for(auto& b : tmp_objs) {
-          b->update();
-        }
-      }
-
-      int health = mn_h;
-
-      //FIXME: Memory leaks?
-      tmp_objs.erase(std::remove_if(tmp_objs.begin(), tmp_objs.end(),
-        [health](T*& obj_ptr) {
-          return obj_ptr->getHealth() < health;
-        }), tmp_objs.end());
-
-      {
-        auto it = tmp_objs.begin();
-        while(it != tmp_objs.end()) {
-          if((*it)->getHealth() > med_h) {
-            objs.push_back(*it);
-            it = tmp_objs.erase(it);
-          } else it++;
-        }
-      }
-
-      {
-        auto it = objs.begin();
-        while(it != objs.end()) {
-          if((*it)->getHealth() < lo_h) {
-            tmp_objs.push_back(*it);
-            it = objs.erase(it);
-          } else it++;
-        }
-      }
-    }
-
+    PipeBase m_plSimplify; // Color space conversion & simplification
+    PipeBase m_plImFormat; // Get image in display color space
   };
 
-  extern std::vector<std::string> filters;
+}
 
-  extern EDS<Ball> ballDetect;
-  extern EDS<Robot> robotDetect;
-
-  extern Goal *blueGoal;
-  extern Goal *blueGoalBuffer;
-  extern Goal *yellowGoal;
-  extern Goal *yellowGoalBuffer;
-
-  extern bool editingGoals;
-
-  void setup();
-  void process();
-  void processCheckerboard();
-
-  void readFilterFromFile(const std::string&);
-
-  void ballDetection();
-  void goalDetection();
-  void robotDetection();
-
-  int readFrame(image_t&);
-
-}}
-
-#endif // RTX_VISIONING_H
+#endif // TUUM_VISIONING_H

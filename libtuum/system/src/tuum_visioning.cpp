@@ -1,355 +1,154 @@
 /** @file tuum_vision.cpp
- *  Vision system implementation.
+ *  @brief Vision system implementation.
  *
- *  @authors Ants-Oskar Mäesalu
  *  @authors Meelik Kiik
  *  @version 0.1
- *  @date 4 December 2015
+ *  @date 27. October 2016
  */
 
-#include <algorithm>
-#include <fstream>
-#include <iostream> // TODO: Remove
-#include <sstream>
-#include <cmath>
+#include "mathematicalConstants.hpp"
 
+#include "tuum_logger.hpp"
 #include "tuum_ogl.hpp"
+#include "tuum_ogl_core.hpp"
 
 #include "Perspective.hpp"
 
 #include "tuum_visioning.hpp"
 #include "tuum_localization.hpp"
-#include "mathematicalConstants.hpp"
-
 
 using namespace tuum::hal;
 
-namespace tuum { namespace Visioning {
+namespace tuum {
 
-  std::vector<std::string> filters;
+  const char* DEF_PPL_SIMPL = "./assets/simplify.ppl";
+  const char* DEF_PPL_IMFORM = "./assets/imformat.ppl";
 
-  Timer debugTimer;
+  const char* DEF_PPL_BLOBS  = "./assets/blobs.ppl";
+  const char* DEF_PPL_GEOM = "./assets/geometry.ppl";
 
-  FeatureSet features;
+  vision::LayoutLoader* gLdr = create_layout_loader();
 
-  EDS<Ball> ballDetect;
-  BallSet balls; // Healthy ball entities vs new/decaying ball entities?
-  BallSet ballsBuffer; // Unused
+  Visioning::Visioning():
+    m_cam_N(1), m_lid(0)
+  {
+    for(size_t i=0; i < m_cam_N; i++) {
+      m_inpStreams[i] = nullptr;
+      m_format[i] = nullptr;
+    }
+  }
 
-  Goal *yellowGoal;
-  Goal *yellowGoalBuffer;
-  Goal *blueGoal;
-  Goal *blueGoalBuffer;
+  void Visioning::init() {
+    Env::spawnBuffer(m_iFrame);
+    Env::spawnBuffer(m_oFrame);
 
-  EDS<Robot> robotDetect;
-  RobotSet robots;
-  RobotSet robotsBuffer; // Unused
+    m_inpStreams[0] = hal::hw.getCamera()->getStream();
+    m_inpStreams[0]->initBuf(m_iFrame);
+    m_inpStreams[0]->initBuf(m_oFrame);
+    auto iprop = hal::hw.getCamera()->getFormat();
 
-  bool editingBalls = false; // Unused
-  bool editingGoals = false;
-  bool editingRobots = false; // Unused
+    m_format[0] = new TxFormat(iprop.width, iprop.height, GL_RGB, GL_UNSIGNED_BYTE);
+    m_tex = new Texture(*m_format[0]);
 
-  void setup() {
-    /*
-    Camera *frontCamera = hal::hw.getCamera();
-    Camera *backCamera = nullptr; //FIXME
+    gLdr->addRequiredElement("inputFormat", *m_format[0]);
 
-    if (frontCamera != nullptr)
-      readFilterFromFile(gC.getStr("Vision.FirstColors"));
-    if (backCamera != nullptr)
-      readFilterFromFile(gC.getStr("Vision.SecondColors"));
+    m_plSimplify.use(gLdr);
+    m_plImFormat.use(gLdr);
+    //m_plGeom.use(gLdr);
 
-    if (frontCamera != nullptr)
-      Vision::setup(0);
-    if (backCamera != nullptr)
-      Vision::setup(1);
-
-    debugTimer.setPeriod(1000);
-    debugTimer.start();
-    */
+    m_plSimplify.load(DEF_PPL_SIMPL, "SimplifyPipe");
+    m_plImFormat.load(DEF_PPL_IMFORM, "ImFormatPipe");
+    //m_plGeom.load(DEF_PPL_GEOM);
 
     RTXLOG("Ready.");
   }
 
-  image_t B1;
+  void Visioning::run() {
+    if(nextFrame() > 0) {
+      //if(!pplIsReady()) return -2;
+      doFramePass();
+    }
+  }
 
+  bool Visioning::pplIsReady() {
+    if(!m_plSimplify.isReady()) return false;
+    if(!m_plImFormat.isReady()) return false;
+    //if(!m_plGeom.isReady()) return false;
+    return true;
+  }
 
-  void process() {
-    /*
-    if (filters.size() == 0) {
-      //std::cout << "Process: Filters are empty" << std::endl;
-      return;
-    } else {
-      for (std::vector<std::string>::iterator filter = filters.begin(); filter != filters.end(); ++filter) {
-        if (filter->size() == 0) {
-          //std::cout << "Process: A filter is empty" << std::endl;
-        }
-      }
+  int Visioning::nextFrame() {
+    uint8_t i = 0; //TODO: Multiple camera support
+    if(m_inpStreams[i] == nullptr) return -1;
+
+    while(!m_iFrameLock.try_lock()) {}; //TODO: Timeout
+
+    ImageStream* strm = m_inpStreams[i];
+    strm->read(m_iFrame);
+
+    int res;
+    if(m_iFrame->id != m_lid) res = 1;
+    else res = 0;
+    m_lid = m_iFrame->id;
+
+    m_iFrameLock.unlock();
+    return res;
+  }
+
+  int Visioning::readFrame(image_t& out) {
+    while(!m_oFrameLock.try_lock()) {};
+    m_oFrame->paste(*out);
+    m_oFrameLock.unlock();
+    return 0;
+  }
+
+  int Visioning::doFramePass()
+  {
+    Pipeline *ppl, *nppl;
+    try
+    {
+      size_t id;
+      while(!m_iFrameLock.try_lock()) {};
+      m_tex->write(m_iFrame->data, GL_RGB, GL_UNSIGNED_BYTE);
+      id = m_iFrame->id;
+      m_iFrameLock.unlock();
+
+      ppl = m_plSimplify.get();
+      (*ppl) << (*m_tex) << Pipeline::Process;
+
+      nppl = m_plImFormat.get();
+      (*nppl) << ppl->out(0) << Pipeline::Process;
+      ppl = nppl;
+
+      //nppl = m_plGeom.get();
+      //(*nppl) << ppl->out(0) << ppl->out(1) << Pipeline::Process;
+      //ppl = nppl;
+
+      while(!m_oFrameLock.try_lock()) {};
+      ppl->out(0).read(m_oFrame->data);
+      m_oFrame->id = id;
+      m_oFrameLock.unlock();
+
+      return 1;
+    } catch(Glip::Exception& e) {
+      std::cerr << e.what() << std::endl;
+      return -3;
     }
 
-    Camera *frontCamera = hal::hw.getCamera();
-    Camera *backCamera = nullptr; //FIXME hal::hw.getBackCamera();
+    return 0;
+  }
 
-    Frame frontFrame, backFrame;
-    if (frontCamera)
-      frontFrame = frontCamera->getFrame();
-    if (backCamera)
-      backFrame = backCamera->getFrame();
-
-    if (frontCamera != nullptr) {
-      if (backCamera != nullptr) {
-        Vision::process({&frontFrame, &backFrame}, filters);
-      } else {
-        Vision::process({&frontFrame}, filters);
-      }
+  void Visioning::setup() {
+    if(gVision == nullptr) {
+      gVision = new Visioning();
+      gVision->init();
     }
-
-    ballDetection();
-    goalDetection();
-    robotDetection();
-    */
-
-    lpx::ogl_set_input(hal::hw.getCamera()->getStream());
   }
 
-  int readFrame(image_t& out) {
-    return lpx::ogl_read_frame(out);
+  void Visioning::process() {
+    if(gVision != nullptr) gVision->run();
   }
 
-  void processCheckerboard() {
-    if (filters.size() == 0) {
-      //std::cout << "Process: Filters are empty" << std::endl;
-      return;
-    } else {
-      for (std::vector<std::string>::iterator filter = filters.begin(); filter != filters.end(); ++filter) {
-        if (filter->size() == 0) {
-          //std::cout << "Process: A filter is empty" << std::endl;
-        }
-      }
-    }
+  Visioning* gVision = nullptr;
 
-    Camera *frontCamera = hal::hw.getCamera();
-    Camera *backCamera = nullptr; //FIXME hal::hw.getBackCamera(); // TODO: Use
-
-    Frame frontFrame, backFrame;
-    if (frontCamera)
-      frontFrame = frontCamera->getFrame();
-    if (backCamera)
-      backFrame = backCamera->getFrame();
-
-    if (frontCamera)
-      Vision::processCheckerboard(frontFrame, filters, 0);
-    if (backCamera)
-      Vision::processCheckerboard(backFrame, filters, 1);
-
-    // TODO: Add back camera frame processing
-  }
-
-  void readFilterFromFile(const std::string &fileName) {
-    std::cout << "Reading filter from " << fileName << std::endl;
-    std::ifstream inputFile(fileName);
-    std::stringstream buffer;
-    buffer << inputFile.rdbuf();
-    filters.push_back(buffer.str());
-    inputFile.close();
-  }
-
-  // Unused
-  void translateBallsBuffer() {
-    editingBalls = true;
-
-    balls.clear();
-    balls = ballsBuffer;
-    ballsBuffer.clear();
-
-    editingBalls = false;
-  }
-
-  void translateGoalsBuffer() {
-    editingGoals = true;
-
-    const int mn_h = -5;
-    const int mx_h = 5;
-
-    Goal* g = blueGoal;
-    Goal* new_g = blueGoalBuffer;
-
-    if (blueGoal != nullptr) {
-
-      if (blueGoalBuffer != nullptr) {
-        blueGoal->update(*blueGoalBuffer->getTransform());
-        blueGoal->update(*blueGoalBuffer->getBlob());
-      } else {
-        blueGoal->update();
-      }
-
-      if (blueGoal->getHealth() <= mn_h) {
-        delete blueGoal;
-      blueGoal = nullptr;
-      }
-    } else if (blueGoalBuffer != nullptr) {
-      blueGoal = new Goal(*blueGoalBuffer);
-    }
-
-    if (yellowGoal != nullptr) {
-      if (yellowGoalBuffer != nullptr) {
-        yellowGoal->update(*yellowGoalBuffer->getTransform());
-        yellowGoal->update(*yellowGoalBuffer->getBlob());
-      } else {
-        yellowGoal->update();
-      }
-
-      if(yellowGoal->getHealth() <= mn_h) {
-        delete yellowGoal;
-        yellowGoal = nullptr;
-      }
-    } else if(yellowGoalBuffer != nullptr) {
-      yellowGoal = new Goal(*yellowGoalBuffer);
-    }
-
-    // TODO: Remove casting to null pointers when localisation is working
-    blueGoalBuffer = nullptr;
-    yellowGoalBuffer = nullptr;
-
-    editingGoals = false;
-  }
-
-  // Unused
-  void translateRobotsBuffer() {
-    editingRobots = true;
-
-    robots.clear();
-    robots = robotsBuffer;
-    robotsBuffer.clear();
-
-    editingRobots = false;
-  }
-
-  double stateProbability(Transform* t1, Transform* t2) {
-    const double A = 125.0;
-    double px = A*gauss_prob2(t1->getX(), 120, t2->getX());
-    double py = A*gauss_prob2(t1->getY(), 120, t2->getY());
-    return 2*px*py / (px+py);
-  }
-
-  void ballDetection() {
-    Vision::BlobSet blobs = Vision::getBlobs();
-    BallSet n_balls;
-
-    for(unsigned int i = 0; i < blobs.size(); ++i) {
-      Color color = blobs[i]->getColor();
-      double density = blobs[i]->getDensity();
-      unsigned int boxArea = blobs[i]->getBoxArea();
-      double ratio = blobs[i]->getBoxRatio();
-
-      if(color != BALL) continue;
-      if(boxArea > CAMERA_WIDTH * CAMERA_HEIGHT) continue;
-      if(density > 1.0) continue;
-      if(boxArea < 4 * 4) continue;
-      if(fabs(1 - ratio) > 0.3) continue;
-      /* && density > 0.6*/
-
-      double distance = blobs[i]->getDistance();
-      double angle = blobs[i]->getAngle();
-
-      n_balls.push_back(new Ball(Localization::toAbsoluteTransform(distance, angle), blobs[i], false));
-    }
-
-    double p, _p, p_ix;
-    Ball* n_ball_ptr;
-    BallSet* ball_set_ptr;
-    for(int ix = 0; ix < n_balls.size(); ix++) {
-      ballDetect.processProbableEntity(n_balls[ix]);
-    }
-
-    ballDetect.update();
-  }
-
-  void goalDetection() {
-    // TODO: Remove casting to null pointers when localisation is working
-    blueGoalBuffer = nullptr;
-    yellowGoalBuffer = nullptr;
-
-    Vision::BlobSet blobs = Vision::getBlobs();
-
-    unsigned int largestYellowArea = 0, largestBlueArea = 0;
-
-    for (unsigned int i = 0; i < blobs.size(); ++i) {
-      Color color = blobs[i]->getColor();
-      double density = blobs[i]->getDensity();
-      unsigned int boxArea = blobs[i]->getBoxArea();
-      //double ratio = blobs[i]->getBoxRatio();
-
-      // Filter out invalid blobs
-      if (color != BLUE_GOAL && color != YELLOW_GOAL) continue;
-      if (boxArea > CAMERA_WIDTH * CAMERA_HEIGHT) continue;
-      if (density > 1.0) continue;
-      if(boxArea < 20 * 20) continue; // TODO: Calibrate with field tests
-      //if(fabs(1 - ratio) > 0.3) continue;
-      /* && density > 0.6*/
-
-      // Relative position
-      //std::pair<double, double> position = Vision::Perspective::virtualToReal(blobs[i]->getPosition(), blobs[i]->getCameraID());
-      double distance = blobs[i]->getDistance();
-      double angle = blobs[i]->getAngle();
-      // std::cout << "Goal: " << distance << " " << angle << std::endl;
-      //unsigned int distance = CAMERA_HEIGHT - point->getY();
-      //double angle = (1 - point->getX() / (CAMERA_WIDTH / 2.0)) * 20 * PI / 180;
-      // TODO: Remove duplicate code
-      if (color == BLUE_GOAL) {
-        if (boxArea > largestBlueArea) {
-          largestBlueArea = boxArea;
-          //if (blueGoalBuffer == nullptr) {
-          blueGoalBuffer = new Goal(Localization::toAbsoluteTransform(distance, angle), blobs[i]);
-          /*} else {
-            blueGoalBuffer->setDistance(distance); // TODO: Compare with previous values as in ball detection
-            blueGoalBuffer->setAngle(angle); // TODO: Compare with previous values as in ball detection
-          }*/
-        }
-      } else {
-        if (boxArea > largestYellowArea) {
-          largestYellowArea = boxArea;
-          //if (yellowGoalBuffer == nullptr) {
-          yellowGoalBuffer = new Goal(Localization::toAbsoluteTransform(distance, angle), blobs[i]);
-          /*} else {
-            yellowGoalBuffer->setDistance(distance); // TODO: Compare with previous values as in ball detection
-            yellowGoalBuffer->setAngle(angle); // TODO: Compare with previous values as in ball detection
-          }*/
-        }
-      }
-
-    }
-
-    translateGoalsBuffer();
-  }
-
-  void robotDetection() {
-    Vision::BlobSet blobs = Vision::getBlobs();
-    RobotSet n_robots;
-
-    for(unsigned int i = 0; i < blobs.size(); ++i) {
-      Color color = blobs[i]->getColor();
-      double density = blobs[i]->getDensity();
-      unsigned int boxArea = blobs[i]->getBoxArea();
-
-      if (color != ROBOT_YELLOW_BLUE && color != ROBOT_BLUE_YELLOW) continue;
-      if (boxArea > CAMERA_WIDTH * CAMERA_HEIGHT) continue;
-      if (density > 1.0) continue;
-
-      double distance = blobs[i]->getDistance();
-      double angle = blobs[i]->getAngle();
-
-      n_robots.push_back(new Robot(Localization::toAbsoluteTransform(distance, angle), blobs[i]));
-    }
-
-    double p, _p, p_ix;
-    Robot* n_robot_ptr;
-    RobotSet* robot_set_ptr;
-    for (int ix = 0; ix < n_robots.size(); ix++) {
-      robotDetect.processProbableEntity(n_robots[ix]);
-    }
-
-    robotDetect.update();
-  }
-
-}}
+}

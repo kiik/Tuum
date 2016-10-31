@@ -23,7 +23,6 @@ namespace usr {
     tuum::hal::setup();
 
     tuum::lpx::init();
-
     tuum::lpx::setup();
 
     tuum::Visioning::setup();
@@ -33,12 +32,12 @@ namespace usr {
     while(1) {
       tuum::hal::process();
       tuum::lpx::process();
+
       tuum::Visioning::process();
     }
   }
 
   int main(int argc, char* argv[]) {
-
     sys_init();
 
     //tuum::v9::setup();
