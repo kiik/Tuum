@@ -21,6 +21,8 @@ using namespace tuum::hal;
 
 namespace tuum {
 
+  const char* DEF_PPL_NONE = "./assets/empty.ppl";
+
   const char* DEF_PPL_SIMPL = "./assets/simplify.ppl";
   const char* DEF_PPL_IMFORM = "./assets/imformat.ppl";
 
@@ -56,8 +58,8 @@ namespace tuum {
     m_plImFormat.use(gLdr);
     //m_plGeom.use(gLdr);
 
-    m_plSimplify.load(DEF_PPL_SIMPL, "SimplifyPipe");
-    m_plImFormat.load(DEF_PPL_IMFORM, "ImFormatPipe");
+    m_plSimplify.load(DEF_PPL_NONE, "SimplifyPipe");
+    m_plImFormat.load(DEF_PPL_NONE, "ImFormatPipe");
     //m_plGeom.load(DEF_PPL_GEOM);
 
     RTXLOG("Ready.");

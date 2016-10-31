@@ -1,0 +1,37 @@
+/** @file  empty.ppl
+ *  @brief Placeholder pipeline.
+ *
+ *  @author Meelik Kiik
+ *  @date 31. October 2016
+ *  @version 0.1
+ */
+
+REQUIRED_FORMAT:outputFormat(inputFormat)
+CALL:FORMAT_TO_CONSTANT(outputFormat)
+
+SOURCE:EmptyShader
+{
+  #version 130
+  uniform sampler2D texIn;
+  out vec4 texOut;
+
+  void main()
+  {
+    vec3 rgb = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
+    texOut.rgb = rgb;
+  }
+
+}
+
+FILTER_LAYOUT:EmptyFilter(outputFormat, EmptyShader)
+
+PIPELINE_MAIN:EmptyPipe
+{
+  INPUT_PORTS(texIn)
+  OUTPUT_PORTS(texOut)
+
+  FILTER_INSTANCE:EmptyFilter
+
+  CONNECTION(THIS, texIn, EmptyFilter, texIn)
+  CONNECTION(EmptyFilter, texOut, THIS, texOut)
+}
