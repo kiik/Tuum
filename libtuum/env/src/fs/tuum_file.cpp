@@ -1,9 +1,12 @@
 
 #include <sstream>
 #include <fstream>
+#include <cstring>
 
 #include "tuum_logger.hpp"
 #include "fs/tuum_file.hpp"
+
+using namespace std;
 
 namespace tuum {
 
@@ -37,8 +40,27 @@ namespace tuum {
     if(!m_file.isValid()) return -1;
 
     std::ifstream ifs(m_file.path);
+
     out.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     return 0;
+  }
+
+  int File::bread(char*& out, size_t& len)
+  {
+    ifstream file (m_file.Path(), ios::in|ios::binary|ios::ate);
+    if (file.is_open())
+    {
+      streampos size = file.tellg();
+      out = new char [size];
+      len = size;
+      file.seekg (0, ios::beg);
+      file.read(out, size);
+      file.close();
+
+      return 0;
+    }
+
+    return -1;
   }
 
   int File::write(const std::string& in, const Mode& mode)
