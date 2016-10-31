@@ -164,4 +164,34 @@ namespace tuum {
     return stm;
   }
 
+  ///////////////////////
+
+  STM* LogicManager::loadDefensivePlay()
+  {
+    STM* stm = new STM();
+    State* st, *st2;
+    Context ctx;
+
+    st = stm->createState("STFindAllyGoal");
+    stm->setState(st);
+    ctx.st = st;
+    st->addController(new ctl::LSAllyGoalLocate(ctx));
+
+    st2 = stm->createState("STAllyGoalMove");
+    st2->setLastState(st);
+    st->setNextState(st2);
+    st = st2;
+    ctx.st = st;
+    st->addController(new ctl::LSAllyGoalMove(ctx));
+
+    st2 = stm->createState("STGoalee");
+    stm->setState(st);
+    ctx.st = st;
+    st->addController(new ctl::LSGoalee(ctx));
+
+    return stm;
+  }
+
+  ////////////////////////////////////////////
+
 }

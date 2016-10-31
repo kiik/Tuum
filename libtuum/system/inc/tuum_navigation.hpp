@@ -33,11 +33,13 @@ namespace tuum {
     int countValidBalls();
 
     Transform calcBallPickupPos(Transform*);
+    Transform calcAllyGoalPos(Transform*);
     Vec2i calcGoalShootPos(Transform*);
 
     Ball* getNearestBall();
 
     Goal* getOpponentGoal();
+    Goal* getAllyGoal();
 
     Robot* getAlly();
 

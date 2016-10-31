@@ -124,6 +124,34 @@ namespace tuum { namespace ctl {
       Motion::TwitchScan twitchScanner;
   };
 
+  //////////////////////
+  class LSAllyGoalLocate : public Controller {
+    public:
+      LSAllyGoalLocate(Context _ctx) : ctx(_ctx) {}
+
+      void init();
+      int run();
+      //bool isRunnable();
+
+    private:
+      Context ctx;
+      Motion::TwitchScan twitchScanner;
+  };
+
+  class LSAllyGoalMove : public Controller {
+    public:
+      LSAllyGoalMove(Context _ctx) : ctx(_ctx) {}
+
+      void init();
+      int run();
+      bool isRunnable();
+
+    private:
+      Context ctx;
+  };
+
+  ///////////////////////////
+
 
   class LSGoalShoot : public Controller {
     public:

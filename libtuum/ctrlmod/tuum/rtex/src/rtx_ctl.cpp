@@ -258,6 +258,68 @@ ERR:
   }
 
 
+  ////////////////////
+  void LSAllyGoalLocate::init() {
+    Motion::stop();
+    ctx.phase = CP_INIT;
+    twitchScanner.init(10, 30);
+  }
+
+  int LSAllyGoalLocate::run() {
+    if(gNavigation->getAllyGoal() != nullptr) return 1;
+
+    twitchScanner.run();
+
+    return 0;
+  }
+
+  void LSAllyGoalMove::init() {
+    Motion::stop();
+
+    Goal* goal = gNavigation->getAllyGoal();
+    if(goal != nullptr)
+      std::cout << "Navigate to " << goal->toString() << std::endl;
+  }
+
+  int LSAllyGoalMove::run() {
+    Goal* goal = nullptr;
+    //if(värava ees) goto OK;
+    //if(väravat ei leitud) goto ERR;
+
+    if(goal != nullptr) {
+      Vec2i pos = gNavigation->calcAllyGoalPos(goal->getTransform()).getPosition();
+
+      Motion::setPositionTarget(pos);
+      Motion::setAimTarget(goal->getTransform()->getPosition());
+
+      //std::cout << d << std::endl;
+      //if(d < 250) mb->startDribbler();
+      //else mb->stopDribbler();
+
+      if(!Motion::isTargetAchieved()) {
+        if(!Motion::isRunning()) Motion::start();
+      } else {
+        goto OK;
+      }
+    } else {
+      Motion::stop();
+    }
+
+    return 0;
+OK:
+    Motion::stop();
+    return 1;
+ERR:
+    Motion::stop();
+    return -1;
+  }
+
+  bool LSAllyGoalMove::isRunnable() {
+    return true;
+  }
+  ////////////////////////////
+
+
   // Shoot to opposing goal
   void LSGoalShoot::init() {
     Motion::stop();

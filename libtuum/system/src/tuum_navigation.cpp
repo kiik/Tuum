@@ -109,6 +109,14 @@ namespace tuum {
     return t;
   }
 
+  //////////////////
+  Transform Navigation::calcAllyGoalPos(Transform* gt) {
+    Vec2f avf = (gt->getPosition() - Localization::getTransform()->getPosition()).getNormalized();
+    Transform t((*gt) - (avf*Motion::VLS_DIST.mn).toInt());
+    return t;
+  }
+  ///////////////////
+
   Vec2i Navigation::calcGoalShootPos(Transform* t) {
     /*Transform me = Localization::getTransform();
     Vec2i me_p = me.getPosition();
@@ -156,6 +164,18 @@ namespace tuum {
 
     return nullptr;
   }
+
+  ///////////////////////////////////////
+  Goal* Navigation::getAllyGoal() {
+    auto goals = mVision->get<GoalDetect>();
+
+    for(auto& g : *goals->getEntities()) {
+      if(g->isAlly()) return g;
+    }
+
+    return nullptr;
+  }
+  ////////////////////////////////////////
 
   Robot* Navigation::getAlly() {
     RobotDetect* robots = mVision->get<RobotDetect>();
