@@ -43,11 +43,13 @@ namespace tuum { namespace gui {
 
   void RobotexUIServer::onMessage(WSProtocol::Message ms)
   {
-    auto it = ms.dat.find(WSProtocol::JSON_CMD_TAG);
+    auto it = ms.dat.find(WSProtocol::JSON_URI_TAG);
     if(it == ms.dat.end()) return;
     if(!it.value().is_string()) return;
 
-    proto()->route(ms); //TODO: Error handling
+    if(proto()->route(ms) < 0) {
+      RTXLOG(format("Unknown URI '%s'!", ms.getURI().c_str()), LOG_ERR);
+    }
   }
 
 }}
