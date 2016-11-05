@@ -1,5 +1,0 @@
-
-namespace tuum { namespace scr {
-
-
-}}
