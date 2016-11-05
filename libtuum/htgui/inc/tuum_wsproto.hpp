@@ -119,7 +119,8 @@ namespace tuum { namespace wsocs {
     }
 
   public:
-    static const char* JSON_URI_TAG;
+    static const char* JS_URI;
+    static const char* JS_CMD;
 
   private:
     size_t route_id_seq;

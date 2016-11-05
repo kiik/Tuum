@@ -3,7 +3,8 @@
 
 namespace tuum { namespace wsocs {
 
-  const char* WSProtocol::JSON_URI_TAG = "uri";
+  const char* WSProtocol::JS_URI = "uri";
+  const char* WSProtocol::JS_CMD = "c";
 
   WSProtocol::WSProtocol():
     route_id_seq(1)
