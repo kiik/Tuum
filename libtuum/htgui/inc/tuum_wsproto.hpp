@@ -20,11 +20,10 @@ namespace tuum { namespace wsocs {
   public:
     typedef unsigned char* data_t;
     typedef uint16_t msg_id_t;
-    typedef std::string key_t;
 
     struct route_t {
       size_t id = 0;
-      key_t  key = "";
+      std::string uri = "";
       WSProtocol* wsp = nullptr;
     };
 
@@ -34,18 +33,12 @@ namespace tuum { namespace wsocs {
       json dat;
       lws* res; // Response write handle
 
+      std::string getURI() {
+        return dat[WSProtocol::JSON_URI_TAG];
+      }
+
       //std::string getRaw()
     };
-
-
-    enum cmd_t {
-      ECMD_None,
-
-      ECMD_Drive, // Manual control
-      ECMD_GetFile,
-    };
-
-    typedef std::map<std::string, cmd_t> cmd_map_t;
 
 
     // Binary interface structures
@@ -126,11 +119,7 @@ namespace tuum { namespace wsocs {
     }
 
   public:
-    static const char* JSON_CMD_TAG;
-
-    static cmd_map_t gCmdMap;
-
-    static cmd_t parseCommand(const std::string&);
+    static const char* JSON_URI_TAG;
 
   private:
     size_t route_id_seq;

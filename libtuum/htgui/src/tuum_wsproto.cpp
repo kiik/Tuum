@@ -3,29 +3,12 @@
 
 namespace tuum { namespace wsocs {
 
-  const char* WSProtocol::JSON_CMD_TAG = "c";
-
-  WSProtocol::cmd_map_t WSProtocol::gCmdMap = {
-    // Manual drive control
-    {"drv", ECMD_Drive},
-
-    // Vision
-    //{"vis", ECMD_Vision}, // {c: 'vis', s: 'CAM0'}
-
-    // Filesystem
-    //{"fs", ECMD_Filesys}, // {c: 'fs', 'fn': '...', ['data': '...']}
-  };
+  const char* WSProtocol::JSON_URI_TAG = "uri";
 
   WSProtocol::WSProtocol():
     route_id_seq(1)
   {
 
-  }
-
-  WSProtocol::cmd_t WSProtocol::parseCommand(const std::string& in) {
-    auto it = WSProtocol::gCmdMap.find(in);
-    if(it == WSProtocol::gCmdMap.end()) return WSProtocol::ECMD_None;
-    return it->second;
   }
 
   int WSProtocol::recv(Packet _dat) {
@@ -42,26 +25,22 @@ namespace tuum { namespace wsocs {
   }*/
 
   int WSProtocol::route(const Message& m) {
-    key_t key = m.dat["c"];
+    std::string uri = m.dat["uri"];
 
-    auto it = mRouteMap.find(key);
-    if(it == mRouteMap.end()) {
-      RTXLOG(format("Unknown '%s'!", key), LOG_ERR);
-      return -1;
-    }
+    auto it = mRouteMap.find(uri);
+    if(it == mRouteMap.end()) return -1;
 
-    it->second.wsp->route(m);
-    return 1;
+    return it->second.wsp->route(m);
   }
 
   size_t WSProtocol::add(route_t ro)
   {
-    if(ro.key == "") return 0;
+    if(ro.uri == "") return 0;
 
     ro.id = route_id_seq++;
-    mRouteMap[ro.key] = ro;
+    mRouteMap[ro.uri] = ro;
 
-    RTXLOG(format("Registered '%s', id=%lu.", ro.key, ro.id));
+    RTXLOG(format("Registered '%s', id=%lu.", ro.uri, ro.id));
     return ro.id;
   }
 

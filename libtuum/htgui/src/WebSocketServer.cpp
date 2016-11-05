@@ -126,18 +126,9 @@ namespace tuum { namespace wsocs {
         {
           if(len <= 0) break;
 
-          //printf("[WSS:cb_wsjs]Data: %s\n", (char*)in);
+          //TODO: Error handling
           json data = json::parse((char*)in);
-
-          auto it = data.find("c");
-          if((it != data.end()) && (it.value().is_string())) {
-            std::string str = it.value();
-            //printf("cmd: %s\n", (char*)in);
-            //printf("a: %s\n", data.dump().c_str());
-
-            onMessage({data, wsi});
-            //onMessage(wsi, data);
-          }
+          onMessage({data, wsi});
          }
         break;
       case LWS_CALLBACK_SERVER_WRITEABLE:
