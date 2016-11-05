@@ -8,6 +8,8 @@
 
 #include "WebSocketServer.hpp"
 
+#include "protocol/rtex_DriveProtocol.hpp"
+
 using namespace tuum::wsocs;
 
 namespace tuum { namespace gui {
@@ -15,6 +17,7 @@ namespace tuum { namespace gui {
   class RobotexUIServer : public wsocs::WebSocketServer
   {
   public:
+    RobotexUIServer();
 
     // Standard ABI
     enum ECommand {
@@ -30,9 +33,10 @@ namespace tuum { namespace gui {
 
     void onConnect();
     void onMessage(lws*, void*, size_t);
-    void onMessage(lws*, json);
+    void onMessage(WSProtocol::Message);
 
-    void route(WSProtocol::cmd_t, json);
+  private:
+    DriveProtocol mDrvProtocol;
 
   };
 

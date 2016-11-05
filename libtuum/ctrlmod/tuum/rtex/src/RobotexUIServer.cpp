@@ -9,6 +9,12 @@ using namespace tuum::wsocs;
 
 namespace tuum { namespace gui {
 
+  RobotexUIServer::RobotexUIServer():
+    WebSocketServer()
+  {
+    size_t id = proto()->add(mDrvProtocol.getDescriptor());
+  }
+
   void RobotexUIServer::onGet()
   {
 
@@ -35,32 +41,13 @@ namespace tuum { namespace gui {
     }
   }
 
-  void RobotexUIServer::onMessage(lws *wsi, json data)
+  void RobotexUIServer::onMessage(WSProtocol::Message ms)
   {
-    auto it = data.find(WSProtocol::JSON_CMD_TAG);
-    if(it == data.end()) return;
+    auto it = ms.dat.find(WSProtocol::JSON_CMD_TAG);
+    if(it == ms.dat.end()) return;
     if(!it.value().is_string()) return;
 
-    std::string str = it.value();
-    WSProtocol::cmd_t cmd = WSProtocol::parseCommand(str);
-    if(cmd == WSProtocol::ECMD_None) return;
-
-    //RTXLOG(format("'onMessage'"), LOG_DEBUG);
-    route(cmd, data);
-  }
-
-  void RobotexUIServer::route(WSProtocol::cmd_t cmd, json data)
-  {
-    switch(cmd) {
-      case WSProtocol::ECMD_Drive:
-      {
-        tuum::cmds::drive(data["s"], data["d"].get<float>() / 1000.0, data["r"]);
-        break;
-      }
-      case WSProtocol::ECMD_None:
-      default:
-        break;
-    }
+    proto()->route(ms); //TODO: Error handling
   }
 
 }}

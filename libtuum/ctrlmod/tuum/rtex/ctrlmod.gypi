@@ -26,6 +26,8 @@
 
     'src/LogicManager.cpp',
     'src/RobotexUIServer.cpp',
+
+    'src/protocol/rtex_DriveProtocol.cpp',
   ],
 
 }
