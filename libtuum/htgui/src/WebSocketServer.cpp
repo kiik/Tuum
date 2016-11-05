@@ -135,7 +135,8 @@ namespace tuum { namespace wsocs {
             //printf("cmd: %s\n", (char*)in);
             //printf("a: %s\n", data.dump().c_str());
 
-            onMessage(wsi, data);
+            onMessage({data, wsi});
+            //onMessage(wsi, data);
           }
          }
         break;
@@ -190,5 +191,7 @@ namespace tuum { namespace wsocs {
 
     return 0;
   }
+
+  WSProtocol* WebSocketServer::proto() { return &mProtocol; }
 
 }}

@@ -6,6 +6,7 @@
 
 #include "json.hpp"
 #include "tuum_platform.hpp"
+#include "tuum_wsproto.hpp"
 
 using json = nlohmann::json;
 
@@ -29,6 +30,8 @@ namespace tuum { namespace wsocs {
     int cb_wsbin(lws *wsi, lws_callback_reasons reason,
                     void *user, void *in, size_t len);
 
+    WSProtocol* proto();
+
   private:
     int m_port, m_opts;
 
@@ -49,7 +52,10 @@ namespace tuum { namespace wsocs {
 
     virtual void onConnect() {};
     virtual void onMessage(lws*, void*, size_t) {};
-    virtual void onMessage(lws*, json) {};
+    virtual void onMessage(WSProtocol::Message) {};
+
+  private:
+      WSProtocol mProtocol;
   };
 
 }}
