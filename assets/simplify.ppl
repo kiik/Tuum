@@ -9,6 +9,7 @@
 REQUIRED_FORMAT:outputFormat(inputFormat)
 CALL:FORMAT_TO_CONSTANT(outputFormat)
 
+INCLUDE(convolution.ppl)
 INCLUDE(colors.ppl)
 
 SOURCE:SimplifyShader
@@ -34,24 +35,71 @@ SOURCE:SimplifyShader
 
 }
 
+SOURCE:RLEShader
+{
+  #version 130
+  uniform sampler2D texIn;
+
+  out vec4 texOut;
+
+  void main()
+  {
+    ivec2 pos = ivec2(gl_FragCoord.xy);
+    vec3 px0 = texelFetch(texIn, pos + ivec2(-1, 0), 0).rgb,
+         px1 = texelFetch(texIn, pos, 0).rgb,
+         px2 = texelFetch(texIn, pos + ivec2(1, 0), 0).rgb;
+         //px3 = texelFetch(texIn, pos + ivec2(0, -1), 0).rgb,
+         //px4 = texelFetch(texIn, pos + ivec2(0, 1), 0).rgb;
+
+    vec3 rgb = px1;
+    /*if((px1 == px0) && (px1 == px2)) {
+      //if((px1 == px3) && (px1 == px4))
+      rgb = vec3(0.0, 0.0, 0.0);
+    } else {
+      rgb = px1;
+    }*/
+
+    texOut.rgb = rgb;
+  }
+
+
+}
+
 SOURCE:YUV2RGBShader
 {
   #version 130
   uniform sampler2D texIn;
   out vec4 texOut;
 
+  #pragma INSERT(convolutionSource)
+
+  const mat3 kernelX = mat3(-1.0, 0.0, 1.0,
+                            -2.0, 0.0, 2.0,
+                            -1.0, 0.0, 1.0);
+  const mat3 kernelY = mat3(-1.0, -2.0, -1.0,
+                             0.0,  0.0,  0.0,
+                             1.0,  2.0,  1.0);
+
   #pragma INSERT(ColorPrimitives)
+
+  const float normalization = 2.0;
 
   void main()
   {
-    vec3 yuv = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb, rgb;
-    YUVToRGB(yuv, rgb);
-    texOut.rgb = rgb;
+    mat3 patch = readPatch(texIn, ivec2(gl_FragCoord.xy), vec4(1.0,1.0,1.0,0.0)/2.0);
+    float gx = convolve(patch, kernelX)/normalization,
+          gy = convolve(patch, kernelY)/normalization;
+
+    float g = sqrt(gx*gx + gy*gy);
+    if(g < 0.02) g = 0.0;
+
+    texOut.rgb = vec3(g, g, g); //texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
   }
 
 }
 
 FILTER_LAYOUT:SimplifyFilter(outputFormat, SimplifyShader)
+FILTER_LAYOUT:RLEFilter(outputFormat, RLEShader)
 FILTER_LAYOUT:YUV2RGBFilter(outputFormat, YUV2RGBShader)
 
 PIPELINE_MAIN:SimplifyPipe
@@ -60,11 +108,14 @@ PIPELINE_MAIN:SimplifyPipe
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:SimplifyFilter
+  FILTER_INSTANCE:RLEFilter
   FILTER_INSTANCE:YUV2RGBFilter
 
   CONNECTION(THIS, texIn, SimplifyFilter, texIn)
   CONNECTION(THIS, dYUV, SimplifyFilter, dYUV)
 
-  CONNECTION(SimplifyFilter, texOut, YUV2RGBFilter, texIn)
+  CONNECTION(SimplifyFilter, texOut, RLEFilter, texIn)
+
+  CONNECTION(RLEFilter, texOut, YUV2RGBFilter, texIn)
   CONNECTION(YUV2RGBFilter, texOut, THIS, texOut)
 }
