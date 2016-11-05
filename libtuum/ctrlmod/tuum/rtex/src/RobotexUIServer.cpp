@@ -43,7 +43,7 @@ namespace tuum { namespace gui {
 
   void RobotexUIServer::onMessage(WSProtocol::Message ms)
   {
-    auto it = ms.dat.find(WSProtocol::JSON_URI_TAG);
+    auto it = ms.dat.find(WSProtocol::JS_URI);
     if(it == ms.dat.end()) return;
     if(!it.value().is_string()) return;
 

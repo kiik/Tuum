@@ -19,7 +19,7 @@ namespace tuum {
   }
 
   int DriveProtocol::route(const WSProtocol::Message& m) {
-    if(m.dat[WSProtocol::JSON_CMD_TAG] == "/drv") {
+    if(m.dat[WSProtocol::JS_CMD] == "drv") {
       drive(m.dat);
       return 0;
     }
