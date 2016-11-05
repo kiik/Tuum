@@ -34,7 +34,7 @@ namespace tuum { namespace wsocs {
       lws* res; // Response write handle
 
       std::string getURI() {
-        return dat[WSProtocol::JSON_URI_TAG];
+        return dat[WSProtocol::JS_URI];
       }
 
       //std::string getRaw()
