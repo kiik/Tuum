@@ -1,5 +1,5 @@
-/** @file  simplify.ppl
- *  @brief Image color space conversion and simplification pipeline.
+/** @file  rtex_football.ppl
+ *  @brief Robotex football pipeline. YUV color space simplification.
  *
  *  @author Meelik Kiik
  *  @date 21. October 2016
@@ -16,7 +16,7 @@ SOURCE:SimplifyShader
 {
   #version 130
   uniform sampler2D texIn;
-  uniform sampler2D dYUV;
+  uniform sampler2D dYUV; // 16:32:32 bit YUV mapper
 
   out vec4 texOut;
 
@@ -71,29 +71,37 @@ SOURCE:YUV2RGBShader
   uniform sampler2D texIn;
   out vec4 texOut;
 
-  #pragma INSERT(convolutionSource)
+  //#pragma INSERT(convolutionSource)
 
+  /*
   const mat3 kernelX = mat3(-1.0, 0.0, 1.0,
                             -2.0, 0.0, 2.0,
                             -1.0, 0.0, 1.0);
   const mat3 kernelY = mat3(-1.0, -2.0, -1.0,
                              0.0,  0.0,  0.0,
                              1.0,  2.0,  1.0);
+                             */
 
   #pragma INSERT(ColorPrimitives)
 
-  const float normalization = 2.0;
+  //const float normalization = 2.0;
 
   void main()
   {
+    /*
     mat3 patch = readPatch(texIn, ivec2(gl_FragCoord.xy), vec4(1.0,1.0,1.0,0.0)/2.0);
     float gx = convolve(patch, kernelX)/normalization,
           gy = convolve(patch, kernelY)/normalization;
 
     float g = sqrt(gx*gx + gy*gy);
     if(g < 0.02) g = 0.0;
+    */
 
-    texOut.rgb = vec3(g, g, g); //texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
+    vec3 yuv = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb, rgb;
+
+    YUVToRGB(yuv, rgb);
+
+    texOut.rgb = rgb; //texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
   }
 
 }
@@ -108,14 +116,15 @@ PIPELINE_MAIN:SimplifyPipe
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:SimplifyFilter
-  FILTER_INSTANCE:RLEFilter
-  FILTER_INSTANCE:YUV2RGBFilter
+  //FILTER_INSTANCE:RLEFilter
+  //FILTER_INSTANCE:YUV2RGBFilter
 
   CONNECTION(THIS, texIn, SimplifyFilter, texIn)
   CONNECTION(THIS, dYUV, SimplifyFilter, dYUV)
 
-  CONNECTION(SimplifyFilter, texOut, RLEFilter, texIn)
+  CONNECTION(SimplifyFilter, texOut, THIS, texOut)
+  //CONNECTION(RLEFilter, texOut, YUV2RGBFilter, texIn)
 
-  CONNECTION(RLEFilter, texOut, YUV2RGBFilter, texIn)
-  CONNECTION(YUV2RGBFilter, texOut, THIS, texOut)
+  //CONNECTION(SimplifyFilter, texOut, YUV2RGBFilter, texIn)
+  //CONNECTION(YUV2RGBFilter, texOut, THIS, texOut)
 }
