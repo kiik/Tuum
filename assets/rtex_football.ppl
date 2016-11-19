@@ -65,6 +65,103 @@ SOURCE:RLEShader
 
 }
 
+
+SOURCE:FisheyeShader
+{
+  #version 130
+  uniform sampler2D texIn;
+  out vec4 texOut;
+
+  uniform float uPower = 0.2;
+
+  void main() {
+    vec2 resolution = vec2(1280, 720);
+    vec2 p = gl_FragCoord.xy / resolution.xy;
+    float prop = resolution.x / resolution.y;
+
+    vec2 m = vec2(0.5, 0.5);
+
+    vec2 d = p - m;
+
+    float r = sqrt(dot(d, d));
+
+    //const float P = 0.43; // 640x480
+    //const float P = 0.52;
+    float power = ( 2.0 * 3.141592 / (2.0 * sqrt(dot(m, m))) ) * (uPower - 0.5);
+
+    float bind;
+    if(power > 0.0) bind = sqrt(dot(m, m));
+    else {
+      if(prop < 1.0) bind = m.x;
+      else bind = m.y;
+    }
+
+    vec2 uv;
+    if (power > 0.0) //fisheye
+      uv = m + normalize(d) * tan(r * power) * bind / tan( bind * power);
+    else if (power < 0.0) //antifisheye
+      uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
+    else uv = p;//no effect for power = 1.0
+
+    vec3 rgb = textureLod(texIn, vec2(uv.x, uv.y), 0).rgb;
+    texOut.rgb = rgb;
+  }
+}
+
+SOURCE:ClearanceShader
+{
+  #version 130
+  uniform sampler2D texIn;
+  out vec4 texOut;
+
+  const int WIDTH = 1280;
+
+  const int TOP_CORNER_LIMIT = 100;
+  const int TOP_CORNER_LIMIT_Y = 100;
+
+  /* 640x480
+  const vec2 TOP_L_LIM_P1 = vec2(200, 0);
+  const vec2 TOP_L_LIM_P2 = vec2(0, 200);
+  const vec2 TOP_R_LIM_P1 = vec2(440, 0);
+  const vec2 TOP_R_LIM_P2 = vec2(640, 200);
+  */
+
+  const vec2 TOP_L_LIM_P1 = vec2(400, 0);
+  const vec2 TOP_L_LIM_P2 = vec2(0, 400);
+  const vec2 TOP_R_LIM_P1 = vec2(WIDTH-400, 0);
+  const vec2 TOP_R_LIM_P2 = vec2(WIDTH, 400);
+
+  float side(vec2 O, vec2 p1, vec2 p2) {
+    return (p2.x - p1.x) * (O.y - p1.y) - (p2.y - p1.y) * (O.x - p1.x);
+  }
+
+  void main()
+  {
+    if(gl_FragCoord.y > (720 - 290)) {
+      if((gl_FragCoord.x > 190*2) && (gl_FragCoord.x < 427*2)) {
+        texOut.rgb = vec3(0, 0, 0);
+        return;
+      }
+    } else {
+      if(side(gl_FragCoord.xy, TOP_R_LIM_P1, TOP_R_LIM_P2) < 0) {
+        texOut.rgb = vec3(0, 0, 0);
+        return;
+      } else if(side(gl_FragCoord.xy, TOP_L_LIM_P1, TOP_L_LIM_P2) > 0) {
+        texOut.rgb = vec3(0, 0, 0);
+        return;
+      }
+      /*if((gl_FragCoord.x < TOP_CORNER_LIMIT) || (gl_FragCoord.x > WIDTH - TOP_CORNER_LIMIT)) {
+        texOut.rgb = vec3(0, 0, 0);
+        return;
+      }*/
+    }
+
+    texOut.rgb = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
+  }
+
+}
+
+
 SOURCE:YUV2RGBShader
 {
   #version 130
@@ -107,6 +204,10 @@ SOURCE:YUV2RGBShader
 }
 
 FILTER_LAYOUT:SimplifyFilter(outputFormat, SimplifyShader)
+FILTER_LAYOUT:FisheyeFilter(outputFormat, FisheyeShader)
+
+FILTER_LAYOUT:ClearanceFilter(outputFormat, ClearanceShader)
+
 FILTER_LAYOUT:RLEFilter(outputFormat, RLEShader)
 FILTER_LAYOUT:YUV2RGBFilter(outputFormat, YUV2RGBShader)
 
@@ -116,14 +217,17 @@ PIPELINE_MAIN:SimplifyPipe
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:SimplifyFilter
+  FILTER_INSTANCE:FisheyeFilter
+  FILTER_INSTANCE:ClearanceFilter
   //FILTER_INSTANCE:RLEFilter
   //FILTER_INSTANCE:YUV2RGBFilter
 
   CONNECTION(THIS, texIn, SimplifyFilter, texIn)
   CONNECTION(THIS, dYUV, SimplifyFilter, dYUV)
 
-  CONNECTION(SimplifyFilter, texOut, THIS, texOut)
-  //CONNECTION(RLEFilter, texOut, YUV2RGBFilter, texIn)
+  CONNECTION(SimplifyFilter, texOut, FisheyeFilter, texIn)
+  CONNECTION(FisheyeFilter, texOut, ClearanceFilter, texIn)
+  CONNECTION(ClearanceFilter, texOut, THIS, texOut)
 
   //CONNECTION(SimplifyFilter, texOut, YUV2RGBFilter, texIn)
   //CONNECTION(YUV2RGBFilter, texOut, THIS, texOut)
