@@ -159,6 +159,7 @@ SOURCE:ClearanceShader
   out vec4 texOut;
 
   const int WIDTH = 1280;
+  const int HEIGHT = 1080;
 
   const int TOP_CORNER_LIMIT = 100;
   const int TOP_CORNER_LIMIT_Y = 100;
@@ -170,10 +171,14 @@ SOURCE:ClearanceShader
   const vec2 TOP_R_LIM_P2 = vec2(640, 200);
   */
 
-  const vec2 TOP_L_LIM_P1 = vec2(400, 0);
-  const vec2 TOP_L_LIM_P2 = vec2(0, 400);
-  const vec2 TOP_R_LIM_P1 = vec2(WIDTH-400, 0);
-  const vec2 TOP_R_LIM_P2 = vec2(WIDTH, 400);
+  const int CL_H = 450;
+  const int CL_W = 500;
+
+  const vec2 L_LIM_P1 = vec2(0 - 300, HEIGHT);
+  const vec2 L_LIM_P2 = vec2(CL_W, HEIGHT - CL_H);
+
+  const vec2 R_LIM_P1 = vec2(WIDTH - CL_W, HEIGHT - CL_H);
+  const vec2 R_LIM_P2 = vec2(WIDTH + 300, HEIGHT);
 
   float side(vec2 O, vec2 p1, vec2 p2) {
     return (p2.x - p1.x) * (O.y - p1.y) - (p2.y - p1.y) * (O.x - p1.x);
@@ -181,25 +186,14 @@ SOURCE:ClearanceShader
 
   void main()
   {
-    /*
-    if(gl_FragCoord.y > (1024 - 290)) {
-      if((gl_FragCoord.x > 190*2) && (gl_FragCoord.x < 427*2)) {
-        texOut.rgb = vec3(0, 0, 0);
-        return;
+    if(gl_FragCoord.y > (HEIGHT - 450)) {
+    if(side(gl_FragCoord.xy, R_LIM_P1, R_LIM_P2) > 0) {
+      if(side(gl_FragCoord.xy, L_LIM_P1, L_LIM_P2) > 0) {
+	texOut.rgb = vec3(0, 0, 0);
+	return;
       }
-    } else {
-      if(side(gl_FragCoord.xy, TOP_R_LIM_P1, TOP_R_LIM_P2) < 0) {
-        texOut.rgb = vec3(0, 0, 0);
-        return;
-      } else if(side(gl_FragCoord.xy, TOP_L_LIM_P1, TOP_L_LIM_P2) > 0) {
-        texOut.rgb = vec3(0, 0, 0);
-        return;
-      }
-      /*if((gl_FragCoord.x < TOP_CORNER_LIMIT) || (gl_FragCoord.x > WIDTH - TOP_CORNER_LIMIT)) {
-        texOut.rgb = vec3(0, 0, 0);
-        return;
-      }*/
-    //}
+    }
+  }
 
     texOut.rgb = texelFetch(texIn, ivec2(gl_FragCoord.xy), 0).rgb;
   }
