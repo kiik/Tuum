@@ -1,5 +1,5 @@
-/** @file  rtex_football_deploy.ppl
- *  @brief Optimized Robotex football pipeline
+/** @file  rtex_football_image.ppl
+ *  @brief Optimized Robotex football pipeline. Applies pixel and color transformations.
  *
  *  @author Meelik Kiik
  *  @date 28. November 2016
@@ -9,40 +9,33 @@
 REQUIRED_FORMAT:outputFormat(inputFormat)
 CALL:FORMAT_TO_CONSTANT(outputFormat)
 
-INCLUDE(clearance.ppl)
 INCLUDE(undistort.ppl)
-INCLUDE(cmvision.ppl)
 
 SOURCE:RtexShader
 {
   #version 130
   uniform sampler2D texIn;
-  //uniform sampler2D dYUV; // 16:32:32 bit YUV mapper
-  //vec3 srgb = texelFetch(dYUV, ivec2(x, y * 32 + z), 0).rgb;
+  uniform sampler2D dYUV; // 16:32:32 bit YUV mapper
 
   out vec4 texOut;
 
   const int WIDTH = 1280;
   const int HEIGHT = 1080;
 
-  #pragma INSERT(Clearance)
   #pragma INSERT(Undistort)
-  #pragma INSERT(CMVision)
 
   void main()
   {
-    if(clearance()) {
-      texOut.rgb = vec3(0, 0, 0);
-      return;
-    }
-
     vec3 pos = undistort(gl_FragCoord.xy);
     vec3 rgb = texelFetch(texIn, ivec2(pos.xy), 0).rgb;
 
-    rgb.r = classify(rgb) / 255.0;
-    texOut.rgb = rgb;
-  }
+    int y = int(rgb.r * 15);
+    int v = int(rgb.g * 31) * 32 + int(rgb.b * 31);
 
+    vec3 srgb = texelFetch(dYUV, ivec2(v, y), 0).rgb;
+
+    texOut.rgb = srgb;
+  }
 
 }
 
@@ -50,13 +43,13 @@ FILTER_LAYOUT:RtexFilter(outputFormat, RtexShader)
 
 PIPELINE_MAIN:SimplifyPipe
 {
-  INPUT_PORTS(texIn) //dYUV
+  INPUT_PORTS(texIn, dYUV)
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:RtexFilter
 
   CONNECTION(THIS, texIn, RtexFilter, texIn)
-  //CONNECTION(THIS, dYUV, RtexFilter, dYUV)
+  CONNECTION(THIS, dYUV, RtexFilter, dYUV)
 
   CONNECTION(RtexFilter, texOut, THIS, texOut)
 }

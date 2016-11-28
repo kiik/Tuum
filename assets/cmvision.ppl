@@ -1,0 +1,25 @@
+/** @file  cmvision.ppl
+ *  @brief CMVision color classification glsl source.
+ *
+ *  @author Meelik Kiik
+ *  @date 28. November 2016
+ *  @version 0.1
+ */
+
+SOURCE:CMVision
+{
+
+  /* CLASSIFICATION CONSTANTS */
+  const int clss_Y[16] = int[](0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 1, 1, 0, 0, 0, 0);
+  const int clss_U[32] = int[](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  const int clss_V[32] = int[](0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+
+  int classify(vec3 rgb) {
+    int x = int(rgb.r * 15);
+    int y = int(rgb.g * 31);
+    int z = int(rgb.b * 31);
+
+    return (clss_Y[x] & clss_U[y] & clss_V[z]);
+  }
+
+}

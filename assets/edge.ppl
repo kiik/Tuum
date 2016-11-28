@@ -1,0 +1,34 @@
+
+
+SOURCE:Edgedetect
+{
+  #pragma INSERT(convolutionSource)
+
+
+  const mat3 kernelX = mat3(-1.0, 0.0, 1.0,
+                            -2.0, 0.0, 2.0,
+                            -1.0, 0.0, 1.0);
+  const mat3 kernelY = mat3(-1.0, -2.0, -1.0,
+                            0.0,  0.0,  0.0,
+                            1.0,  2.0,  1.0);
+
+  /*
+  const mat3 kernelX = mat3(3.0, 10.0, 3.0,
+  0.0, 0.0, 0.0,
+  3.0, -10.0, -3.0);
+  const mat3 kernelY = mat3(3.0, 0.0, -3.0,
+  10.0,  0.0,  -10.0,
+  3.0,  0.0,  -3.0);
+  */
+
+  const float normalization = 3.0;
+
+  float edgedetect(ivec2 pos) {
+    mat3 patch = readPatch(texInput, pos, vec4(1.0,1.0,1.0,0.0)/2.0);
+    float gx = convolve(patch, kernelX)/normalization,
+          gy = convolve(patch, kernelY)/normalization;
+
+    return sqrt(gx*gx + gy*gy);
+  }
+
+}
