@@ -50,13 +50,12 @@ FILTER_LAYOUT:RtexFilter(outputFormat, RtexShader)
 
 PIPELINE_MAIN:SimplifyPipe
 {
-  INPUT_PORTS(texIn) //dYUV
+  INPUT_PORTS(texIn)
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:RtexFilter
 
   CONNECTION(THIS, texIn, RtexFilter, texIn)
-  //CONNECTION(THIS, dYUV, RtexFilter, dYUV)
 
   CONNECTION(RtexFilter, texOut, THIS, texOut)
 }

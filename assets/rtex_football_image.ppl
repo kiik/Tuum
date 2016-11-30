@@ -15,7 +15,6 @@ SOURCE:RtexShader
 {
   #version 130
   uniform sampler2D texIn;
-  uniform sampler2D dYUV; // 16:32:32 bit YUV mapper
 
   out vec4 texOut;
 
@@ -29,12 +28,7 @@ SOURCE:RtexShader
     vec3 pos = undistort(gl_FragCoord.xy);
     vec3 rgb = texelFetch(texIn, ivec2(pos.xy), 0).rgb;
 
-    int y = int(rgb.r * 15);
-    int v = int(rgb.g * 31) * 32 + int(rgb.b * 31);
-
-    vec3 srgb = texelFetch(dYUV, ivec2(v, y), 0).rgb;
-
-    texOut.rgb = srgb;
+    texOut.rgb = rgb;
   }
 
 }
@@ -43,13 +37,12 @@ FILTER_LAYOUT:RtexFilter(outputFormat, RtexShader)
 
 PIPELINE_MAIN:SimplifyPipe
 {
-  INPUT_PORTS(texIn, dYUV)
+  INPUT_PORTS(texIn)
   OUTPUT_PORTS(texOut)
 
   FILTER_INSTANCE:RtexFilter
 
   CONNECTION(THIS, texIn, RtexFilter, texIn)
-  CONNECTION(THIS, dYUV, RtexFilter, dYUV)
 
   CONNECTION(RtexFilter, texOut, THIS, texOut)
 }
