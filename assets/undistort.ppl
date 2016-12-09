@@ -29,7 +29,7 @@ SOURCE:Undistort
   const float SCALE = 1.92;
 
   vec3 undistort(vec2 coord) {
-    float x = coord.x / (WIDTH / 2.0) - 1.0, y = coord.y / (HEIGHT / 2.0) - 1.0; // 100, 100
+    float x = coord.x / (WIDTH / 2.0) - 1.0, y = coord.y / (HEIGHT / 2.0) - 1.0;
 
     x *= SCALE;
     y *= SCALE;
