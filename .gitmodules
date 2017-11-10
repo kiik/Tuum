@@ -1,9 +1,9 @@
 [submodule "tuum-rtex"]
 	path = tuum-rtex
-	url = git@github.com:kiik/tuum-rtex.git
+	url = https://github.com/kiik/tuum-rtex.git
 [submodule "libtuum"]
 	path = libtuum
-	url = git@github.com:kiik/libtuum.git
+	url = https://github.com/kiik/libtuum.git
 [submodule "tuum-deimos"]
 	path = tuum-deimos
-	url = git@github.com:kiik/tuum-deimos.git
+	url = https://github.com/kiik/tuum-deimos.git
